@@ -23,6 +23,9 @@ LAST_FLASHED_ELF = temp/last_flashed.elf
 
 RESET_VECTOR = 0x0
 
+
+.PHONY: synth flash program debug gdb objdump clean
+
 # ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
 .PRECIOUS: $(TARGET_ELF)
 
@@ -47,9 +50,13 @@ debug: program
 	openocd -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_debug.cfg
 
 $(LAST_FLASHED_ELF):
+	@echo "The device must be flashed before this tool can be used. Flash by running:"
+	@echo "	make flash"
+	@exit 1
 
 gdb: $(LAST_FLASHED_ELF)
 	$(GDB) --command=openocd.gdb $(LAST_FLASHED_ELF)
+
 
 objdump: $(LAST_FLASHED_ELF)
 	$(OBJDUMP) -D $(LAST_FLASHED_ELF)
