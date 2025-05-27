@@ -1,11 +1,22 @@
-TOOLCHAIN_PREFIX ?= riscv-none-elf-
+# board config
 BOARD ?= nexys_video
+FLASH_ADDR ?= 0x0
+RESET_VECTOR ?= 0x0
 
+# files
 WORKSPACE ?= $(shell pwd)
 VEERWOLF_ROOT ?= $(WORKSPACE)/fusesoc_libraries/veerwolf
 VEERWOLF_SW = $(VEERWOLF_ROOT)/sw
 VEERWOLF_DATA = $(VEERWOLF_ROOT)/data
+TARGET ?= $(VEERWOLF_SW)/blinky.vh
+TARGET_ELF = $(basename $(TARGET)).elf
+## uImage to flash
+TARGET_UB = $(basename $(TARGET)).ub
+## symlink to the last program that was flashed
+LAST_FLASHED_ELF = temp/last_flashed.elf
 
+# toolchain
+TOOLCHAIN_PREFIX ?= riscv-none-elf-
 CC = $(TOOLCHAIN_PREFIX)gcc
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
@@ -14,14 +25,6 @@ GDB = $(TOOLCHAIN_PREFIX)gdb
 CFLAGS = -g -Wall
 LDFLAGS = -g
 
-TARGET ?= $(VEERWOLF_SW)/blinky.vh
-TARGET_ELF = $(basename $(TARGET)).elf
-# uImage to flash
-TARGET_UB = $(basename $(TARGET)).ub
-# symlink to the last program that was flashed
-LAST_FLASHED_ELF = temp/last_flashed.elf
-
-RESET_VECTOR = 0x0
 
 
 .PHONY: synth flash program debug gdb objdump clean
@@ -31,9 +34,8 @@ RESET_VECTOR = 0x0
 
 #all: synth program debug
 
-# probably not needed as this is the default for --bootrom_file
-$(VEERWOLF_SW)/bootloader.vh:
-	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) bootloader.vh
+
+### build hardware
 
 synth: $(VEERWOLF_SW)/bootloader.vh
 	fusesoc run --build --target=$(BOARD) --flag=cpu_el2 veerwolf --bootrom_file=$(VEERWOLF_SW)/bootloader.vh
@@ -49,33 +51,38 @@ program:
 debug: program
 	openocd -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_debug.cfg
 
-$(LAST_FLASHED_ELF):
-	@echo "The device must be flashed before this tool can be used. Flash by running:"
-	@echo "	make flash"
-	@exit 1
+
+### build software
+
+%.elf: %.S
+	$(CC) $(CFLAGS) -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
+
+%.bin: %.elf
+	$(OBJCOPY) -O binary $< $@
+
+%.ub: %.bin
+	mkimage -A riscv -C none -T standalone -a $(FLASH_ADDR) -e $(RESET_VECTOR) -n '$@' -d $< $@
+
+
+### tools
 
 gdb: $(LAST_FLASHED_ELF)
 	$(GDB) --command=openocd.gdb $(LAST_FLASHED_ELF)
-
 
 objdump: $(LAST_FLASHED_ELF)
 	$(OBJDUMP) -D $(LAST_FLASHED_ELF)
 
 
-%.elf: %.S
-	$(CC) $(CFLAGS) -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
-%.bin: %.elf
-	$(OBJCOPY) -O binary $< $@
-%.ub: %.bin
-	mkimage \
-	-A riscv \
-	-C none \
-	-T standalone \
-	-a 0x0 \
-	-e $(RESET_VECTOR) \
-	-n '$@' \
-	-d $< \
-	$@
+### misc
+
+$(VEERWOLF_SW)/bootloader.vh:
+	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) bootloader.vh
+
+# needed by gdb
+$(LAST_FLASHED_ELF):
+	@echo "The device must be flashed before this tool can be used. Flash by running:"
+	@echo "	make flash"
+	@exit 1
 
 clean:
 	rm -rf build/ temp/ *.jou *.log .Xil/
