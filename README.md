@@ -55,7 +55,7 @@ This method means that the SoC doesn't need to be resynthesized in order to run 
 
 The program is written to memory address `0`.
 
-Bootloader.
+Bootloader. U-Boot.
 
 
 ```sh
@@ -91,7 +91,35 @@ To connect GDB and start debugging the last program that was flashed, open a new
 ```sh
 make gdb
 ```
+To start debugging from the beginning of the program, use OpenOCD over telnet to set `reg pc 0` before running `make gdb`.
 
 ### UART
 
 On Nexys Video you need to connect a second micro-USB cable to the UART port.
+
+The serial port can be monitored e.g. with [`tio`](https://github.com/tio/tio). On Ubuntu 24.04 `tio` can be installed with
+```sh
+sudo apt install tio
+```
+
+The available serial ports can be shown with
+```shell
+tio --list
+```
+Look for something including UART and run
+```shell
+tio -b 115200 -d 8 -s 1 -p none <port>
+```
+to connect to it. In fact, the settings given here for baud rate, data bits, stop bits and parity are the default in `tio`, but are given explicitly to match VeeRwolf.
+
+
+To test the setup, flash the `hello_uart` program which writes a string to the UART
+```sh
+make TARGET=fusesoc_libraries/veerwolf/sw/hello_uart.S flash
+```
+Start the debug server
+```sh
+make debug
+```
+and you should see something printed to the screen.
+
