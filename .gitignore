@@ -1,0 +1,12 @@
+# FuseSoC
+fusesoc.conf
+fusesoc_libraries/
+build/
+
+# Vivado
+.Xil/
+*.jou
+*.log
+
+# Misc
+temp/
