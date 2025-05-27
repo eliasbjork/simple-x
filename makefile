@@ -16,25 +16,31 @@ LDFLAGS = -g
 
 TARGET ?= $(VEERWOLF_SW)/blinky.vh
 TARGET_ELF = $(basename $(TARGET)).elf
-TARGET_UB = $(basename $(TARGET)).ub	# uImage to flash
-LAST_FLASHED_ELF = temp/last_flashed.elf	# symlink to the last program that was flashed
+# uImage to flash
+TARGET_UB = $(basename $(TARGET)).ub
+# symlink to the last program that was flashed
+LAST_FLASHED_ELF = temp/last_flashed.elf
 
 RESET_VECTOR = 0x0
 
+# ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
+.PRECIOUS: $(TARGET_ELF)
+
 #all: synth program debug
 
+# probably not needed as this is the default for --bootrom_file
 $(VEERWOLF_SW)/bootloader.vh:
 	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) bootloader.vh
 
 synth: $(VEERWOLF_SW)/bootloader.vh
 	fusesoc run --build --target=$(BOARD) --flag=cpu_el2 veerwolf --bootrom_file=$(VEERWOLF_SW)/bootloader.vh
 
-flash: synth $(TARGET_UB)
+flash: $(TARGET_UB)
 	openocd -c "set BINFILE $(TARGET_UB)" -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_write_flash.cfg
 	mkdir -p temp
-	ln -sf $(TARGET_ELF) $(LAST_FLASHED_ELF)
+	ln -sf $(shell realpath --relative-to=temp $(TARGET_ELF)) $(LAST_FLASHED_ELF)
 
-program: flash
+program:
 	openocd -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_program.cfg
 
 debug: program
@@ -63,7 +69,6 @@ objdump: $(LAST_FLASHED_ELF)
 	-n '$@' \
 	-d $< \
 	$@
-
 
 clean:
 	rm -rf build/
