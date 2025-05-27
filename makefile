@@ -78,6 +78,5 @@ objdump: $(LAST_FLASHED_ELF)
 	$@
 
 clean:
-	rm -rf build/
-	rm -rf temp/
+	rm -rf build/ temp/ *.jou *.log .Xil/
 	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
