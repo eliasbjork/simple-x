@@ -1,3 +1,7 @@
+# Binaries
+*.elf
+*.ub
+
 # FuseSoC
 fusesoc.conf
 fusesoc_libraries/
