@@ -22,7 +22,7 @@ OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
 GDB = $(TOOLCHAIN_PREFIX)gdb
 
-CFLAGS = -g -Wall
+CFLAGS = -g -Os -Wall
 LDFLAGS = -g
 
 
@@ -53,6 +53,9 @@ debug: program
 
 
 ### build software
+
+%.elf: %.c
+	$(CC) $(CFLAGS) -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -Tsw/crt/link.ld -o $@ sw/crt/crt.s $<
 
 %.elf: %.S
 	$(CC) $(CFLAGS) -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
