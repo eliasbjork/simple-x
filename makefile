@@ -13,7 +13,7 @@ TARGET_ELF = $(basename $(TARGET)).elf
 ## uImage to flash
 TARGET_UB = $(basename $(TARGET)).ub
 ## symlink to the last program that was flashed
-LAST_FLASHED_ELF = temp/last_flashed.elf
+LAST_FLASHED_ELF = .temp/last_flashed.elf
 
 # toolchain
 TOOLCHAIN_PREFIX ?= riscv-none-elf-
@@ -42,8 +42,8 @@ synth: $(VEERWOLF_SW)/bootloader.vh
 
 flash: $(TARGET_UB)
 	openocd -c "set BINFILE $(TARGET_UB)" -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_write_flash.cfg
-	mkdir -p temp
-	ln -sf $(shell realpath --relative-to=temp $(TARGET_ELF)) $(LAST_FLASHED_ELF)
+	mkdir -p .temp
+	ln -sf $(shell realpath --relative-to=.temp $(TARGET_ELF)) $(LAST_FLASHED_ELF)
 
 program:
 	openocd -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_program.cfg
@@ -85,5 +85,5 @@ $(LAST_FLASHED_ELF):
 	@exit 1
 
 clean:
-	rm -rf build/ temp/ *.jou *.log .Xil/
+	rm -rf build/ .temp/ *.jou *.log .Xil/
 	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean

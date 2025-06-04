@@ -9,4 +9,4 @@ build/
 *.log
 
 # Misc
-temp/
+.temp/
