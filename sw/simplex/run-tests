@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# Base directory (can be passed as argument)
+BASE_DIR="${1:-.}"
+
+# allowed error margin
+tolerance="0.000001"
+
+# Find all directories containing both 'i' and 'linopt.sol' files
+find "$BASE_DIR" -type f -name i -exec dirname {} \; | while read -r dir; do
+    if [[ -f "$dir/i" && -f "$dir/linopt.sol" ]]; then
+        printf "Running testcase: %s " "$dir"
+
+        res=$(./a.out < $dir/i | sed "s/z = //")
+        sol=$(head -n 1 "$dir/linopt.sol" | sed "s/z = //")
+
+        # calculate the absolute difference using awk
+        absdiff=$(awk -v sol="$sol" -v res="$res" 'BEGIN { diff = sol - res; if (diff < 0) { absdiff = -diff } else { absdiff = diff }; print absdiff }')
+
+        # check if absdiff is within the tolerance
+        comparison_result=$(awk -v absdiff="$absdiff" -v tolerance="$tolerance" 'BEGIN { if (absdiff <= tolerance) print "1"; else print "0" }')
+
+        # pass test if absolute difference is inside tolerance
+        if [[ $comparison_result -eq 1 ]]; then
+            echo -e "\e[1;32mPASS\e[0m"
+        else
+            echo -e "\e[1;31mFAIL\e[0m"
+            printf "\tresult:  %s\n" "$res"
+            printf "\tcorrect: %s\n" "$sol"
+            # echo "stopping..."
+            # exit 1
+        fi
+
+    fi
+done
+
+
