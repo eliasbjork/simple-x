@@ -15,15 +15,19 @@ TARGET_UB = $(basename $(TARGET)).ub
 ## symlink to the last program that was flashed
 LAST_FLASHED_ELF = .temp/last_flashed.elf
 
+# C runtime
+OBJS = sw/crt/crt.o sw/lib/uartio.o
+
 # toolchain
 TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
 CC = $(TOOLCHAIN_PREFIX)gcc
+#AS = $(TOOLCHAIN_PREFIX)as
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
 GDB = $(TOOLCHAIN_PREFIX)gdb
 
-CFLAGS = -g -Os -Wall
-LDFLAGS = -g
+CFLAGS = -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -g -Os -Wall
+LDFLAGS = -Tsw/crt/link.ld
 
 
 
