@@ -2,6 +2,10 @@
 *.elf
 *.ub
 
+# C
+*.o
+*.out
+
 # FuseSoC
 fusesoc.conf
 fusesoc_libraries/
