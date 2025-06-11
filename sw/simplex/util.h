@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define double float
 
 double** make_matrix(int m, int n);
 

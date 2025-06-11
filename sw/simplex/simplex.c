@@ -3,6 +3,7 @@
 #include "simplex.h"
 #include "util.h"
 
+#define double float
 
 static const double eps = 1e-6;
 

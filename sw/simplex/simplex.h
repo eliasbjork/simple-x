@@ -1,6 +1,8 @@
 #ifndef SIMPLEX_H
 #define SIMPLEX_H
 
+#define double float
+
 typedef struct simplex_t simplex_t;
 
 double simplex(int m, int n, double** a, double* b, double* c, double* x, double y);
