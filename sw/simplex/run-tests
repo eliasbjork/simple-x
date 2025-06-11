@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# Base directory (can be passed as argument)
+# base directory (can be passed as argument)
 BASE_DIR="${1:-.}"
 
 # allowed error margin
 tolerance="0.000001"
 
-# Find all directories containing both 'i' and 'linopt.sol' files
+# find all directories containing both 'i' and 'linopt.sol' files
 find "$BASE_DIR" -type f -name i -exec dirname {} \; | while read -r dir; do
     if [[ -f "$dir/i" && -f "$dir/linopt.sol" ]]; then
         printf "Running testcase: %s " "$dir"
@@ -30,8 +30,5 @@ find "$BASE_DIR" -type f -name i -exec dirname {} \; | while read -r dir; do
             # echo "stopping..."
             # exit 1
         fi
-
     fi
 done
-
-

@@ -7,6 +7,8 @@ OBJS = simplex.o util.o
 
 all: $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS)
+
+test: all
 	bash run-tests
 
 clean:
