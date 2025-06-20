@@ -23,11 +23,17 @@
 
 typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
+typedef _Bool bool;
+#define false 0
+#define true 1
 
 volatile uint8_t* uart_base = (volatile uint8_t*)UART_BASE;
 volatile uint32_t* clk_freq_hz = (volatile uint32_t*)CLK_FREQ_HZ;
 
-static inline void init_uart() {
+static bool uart_initialized = false;
+
+
+static inline void _init_uart() {
     // set DLAB bit in LCR
     *(uart_base + REG_LCR) = 0x80;
 
@@ -41,13 +47,17 @@ static inline void init_uart() {
 
     // disable interrupts
     *(uart_base + REG_IER) = (uint8_t)0;
+
+    uart_initialized = true;
 }
 
 
 void print(char* s) {
     volatile uint8_t line_status;
 
-    init_uart();
+    if (!uart_initialized) {
+        _init_uart();
+    }
 
     uint8_t* c = (uint8_t*)s;
     while (*c) {
@@ -59,4 +69,21 @@ void print(char* s) {
         // write byte to UART
         *uart_base = *c++;
     }
+}
+
+
+void _putchar(char c) {
+    volatile uint8_t line_status;
+
+    if (!uart_initialized) {
+        _init_uart();
+    }
+
+    // await space in UART FIFO
+    do {
+        line_status = *(uart_base + REG_LSR);
+    } while (!(line_status & LSR_THRE));
+
+    // write byte to UART
+    *uart_base = c;
 }
