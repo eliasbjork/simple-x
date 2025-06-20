@@ -15,7 +15,7 @@ A cross-compilation toolchain is (most likely) needed. On Ubuntu 24.04, the GNU 
 sudo apt install gcc-riscv64-unknown-elf
 ```
 
-If using a toolchain with a prefix different from `riscv64-unknown-elf-`, `make` can be invoked by supplying `TOOLCHAIN_PREFIX=<your-toolchain-prefix->` to the command.
+Subsequent steps make use of `make`. If using a toolchain with a prefix different from `riscv64-unknown-elf-`, the parameter `TOOLCHAIN_PREFIX=<your-toolchain-prefix->` can be supplied to the `make` invocation.
 
 ### FuseSoC
 
