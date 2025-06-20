@@ -10,6 +10,13 @@ More details are available in the [VeeRwolf repo README](https://github.com/chip
 
 ### RISC-V toolchain
 
+A cross-compilation toolchain is (most likely) needed. On Ubuntu 24.04, the GNU RISC-V toolchain can be installed with
+```sh
+sudo apt install gcc-riscv64-unknown-elf
+```
+
+If using a toolchain with a prefix different from `riscv64-unknown-elf-`, `make` can be invoked by supplying `TOOLCHAIN_PREFIX=<your-toolchain-prefix->` to the command.
+
 ### FuseSoC
 
 ```sh
