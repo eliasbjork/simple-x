@@ -16,7 +16,7 @@ TARGET_UB = $(basename $(TARGET)).ub
 LAST_FLASHED_ELF = .temp/last_flashed.elf
 
 # toolchain
-TOOLCHAIN_PREFIX ?= riscv-none-elf-
+TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
 CC = $(TOOLCHAIN_PREFIX)gcc
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
@@ -55,10 +55,13 @@ debug: program
 ### build software
 
 %.elf: %.c
-	$(CC) $(CFLAGS) -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -Tsw/crt/link.ld -o $@ sw/crt/crt.s $<
+	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -Tsw/crt/link.ld -o $@ sw/crt/crt.s $<
+
+%.elf: %.s
+	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
 
 %.elf: %.S
-	$(CC) $(CFLAGS) -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
+	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
