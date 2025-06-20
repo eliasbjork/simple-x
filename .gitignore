@@ -16,5 +16,8 @@ build/
 *.jou
 *.log
 
+# VSCode
+.vscode/
+
 # Misc
 .temp/
