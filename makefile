@@ -24,7 +24,7 @@ CC = $(TOOLCHAIN_PREFIX)gcc
 #AS = $(TOOLCHAIN_PREFIX)as
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
-GDB = $(TOOLCHAIN_PREFIX)gdb
+GDB = gdb-multiarch
 
 CFLAGS = -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -g -Os -Wall
 LDFLAGS = -Tsw/crt/link.ld
@@ -77,10 +77,10 @@ debug: program
 ### tools
 
 gdb: $(LAST_FLASHED_ELF)
-	$(GDB) --command=openocd.gdb $(LAST_FLASHED_ELF)
+	@$(GDB) --command=openocd.gdb $(LAST_FLASHED_ELF)
 
 objdump: $(LAST_FLASHED_ELF)
-	$(OBJDUMP) -D $(LAST_FLASHED_ELF)
+	@$(OBJDUMP) -D $(LAST_FLASHED_ELF)
 
 
 ### misc

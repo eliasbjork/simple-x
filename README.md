@@ -17,6 +17,13 @@ sudo apt install gcc-riscv64-unknown-elf
 
 Subsequent steps make use of `make`. If using a toolchain with a prefix different from `riscv64-unknown-elf-`, the parameter `TOOLCHAIN_PREFIX=<your-toolchain-prefix->` can be supplied to the `make` invocation.
 
+### GDB Multiarch
+
+For debugging, a cross-architecture debugger is needed. GDB Multiarch can be installed on Ubuntu 24.04 with
+```sh
+sudo apt install gdb-multiarch
+```
+
 ### FuseSoC
 
 ```sh
