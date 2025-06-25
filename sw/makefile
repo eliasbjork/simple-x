@@ -7,7 +7,7 @@ CC = $(TOOLCHAIN_PREFIX)gcc
 AS = $(CC) $(CFLAGS) -c
 
 CFLAGS = -march=rv32im_zicsr -mabi=ilp32 -nostartfiles -nostdlib -Os -Wall -g $(DEFINES)
-LDFLAGS = -Tcrt/link.ld
+LDFLAGS = -Tcrt/link.ld -lgcc
 
 OBJS =	crt/crt.o \
 		lib/uartio.o \
@@ -15,8 +15,7 @@ OBJS =	crt/crt.o \
 
 DEFINES =	-DPRINTF_DISABLE_SUPPORT_LONG_LONG \
 			-DPRINTF_DISABLE_SUPPORT_PTRDIFF_T \
-			-DPRINTF_DISABLE_SUPPORT_EXPONENTIAL \
-			-DPRINTF_DISABLE_SUPPORT_FLOAT
+			-DPRINTF_DISABLE_SUPPORT_EXPONENTIAL
 
 .PHONY: all clean
 
@@ -26,4 +25,4 @@ $(TARGET_ELF): $(TARGET_C) $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@ $<
 
 clean:
-	rm -f *.o **/*.o *.elf **/*.elf
+	rm -f *.o **/*.o *.elf **/*.elf ext/printf/printf.o
