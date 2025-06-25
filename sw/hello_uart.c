@@ -2,6 +2,6 @@
 
 int main() {
     for (;;) {
-        print("Hello world!\n");
+        printf("Hello world!\n");
     }
 }

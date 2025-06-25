@@ -48,26 +48,6 @@ static inline void _init_uart() {
 }
 
 
-void print(char* s) {
-    volatile uint8_t line_status;
-
-    if (!uart_initialized) {
-        _init_uart();
-    }
-
-    uint8_t* c = (uint8_t*)s;
-    while (*c) {
-        // await space in UART FIFO
-        do {
-            line_status = *(uart_base + REG_LSR);
-        } while (!(line_status & LSR_THRE));
-
-        // write byte to UART
-        *uart_base = *c++;
-    }
-}
-
-
 void _putchar(char c) {
     volatile uint8_t line_status;
 

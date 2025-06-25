@@ -1,4 +1,4 @@
-#include "ext/printf/printf.h"
+#include "lib/uartio.h"
 
 int main() {
     int i1 = 1;

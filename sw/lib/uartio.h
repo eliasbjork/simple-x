@@ -1,7 +1,8 @@
 #ifndef UARTIO_H
 #define UARTIO_H
 
-void print(char*);
+#include "../ext/printf/printf.h"
+
 void _putchar(char);
 
 #endif // UARTIO_H
