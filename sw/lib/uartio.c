@@ -1,3 +1,5 @@
+#include <stdbool.h>
+#include <stdint.h>
 #include "uartio.h"
 
 #define CLK_FREQ_HZ 0x8000103C
@@ -21,15 +23,9 @@
 #define FCR_MODE1   0x08       // set receiver in mode 1
 #define FCR_FIFO_8  0x80       // 8 bytes in RCVR FIFO
 
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
-typedef _Bool bool;
-#define false 0
-#define true 1
 
-volatile uint8_t* uart_base = (volatile uint8_t*)UART_BASE;
-volatile uint32_t* clk_freq_hz = (volatile uint32_t*)CLK_FREQ_HZ;
-
+static volatile uint8_t* uart_base = (volatile uint8_t*)UART_BASE;
+static volatile uint32_t* clk_freq_hz = (volatile uint32_t*)CLK_FREQ_HZ;
 static bool uart_initialized = false;
 
 
