@@ -26,4 +26,4 @@ $(TARGET_ELF): $(TARGET_C) $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@ $<
 
 clean:
-	rm -f **/*.o **/*.elf
+	rm -f *.o **/*.o *.elf **/*.elf
