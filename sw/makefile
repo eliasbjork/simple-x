@@ -25,4 +25,4 @@ $(TARGET_ELF): $(TARGET_C) $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@ $<
 
 clean:
-	rm -f *.o **/*.o *.elf **/*.elf ext/printf/printf.o
+	rm -f *.o **/*.o *.elf **/*.elf *.ub **/*.ub ext/printf/printf.o
