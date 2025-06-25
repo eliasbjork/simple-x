@@ -147,12 +147,15 @@ tio --list
 ```
 Look for something including UART and run
 ```shell
-tio -b 115200 -d 8 -s 1 -p none <port>
+tio -b 115200 -d 8 -s 1 -p none --map INLCRNL <port>
 ```
-to connect to it. In fact, the settings given here for baud rate, data bits, stop bits and parity are the defaults in `tio`, but are given explicitly to match VeeRwolf. It is thus sufficient to run `tio <port>`.
+to connect to it. In fact, the settings given here for baud rate, data bits, stop bits and parity are the defaults in `tio`, but are given explicitly to match VeeRwolf. The `--map INLCRNL` flag maps recieved newline characters to carriage return + newline. Thus, if there are no other UART devices connected, it should be sufficient to run
+```sh
+tio --map INLCRNL $(tio --list | grep UART)
+```
 
 
-To test the setup, flash the `hello_uart` program which writes a string to the UART
+To test the setup, flash the `hello_uart.S` program which writes a string to the UART
 ```sh
 make TARGET=fusesoc_libraries/veerwolf/sw/hello_uart.S flash
 ```
