@@ -1,5 +1,5 @@
 TARGET ?= hello_uart.c
-TARGET_C = $(basename $(TARGET)).c
+TARGET_OBJ = $(basename $(TARGET)).o
 TARGET_ELF = $(basename $(TARGET)).elf
 
 TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
@@ -19,7 +19,7 @@ CFLAGS = \
 
 LDFLAGS = \
 	-Tcrt/link.ld \
-	-lgcc
+	-static-libgcc -lgcc
 
 OBJS = \
 	crt/crt.o \
@@ -35,8 +35,8 @@ DEFINES = \
 .PHONY: all
 all: $(TARGET_ELF)
 
-$(TARGET_ELF): $(TARGET_C) $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@ $<
+$(TARGET_ELF): $(TARGET_OBJ) $(OBJS)
+	$(CC) $(CFLAGS) $(TARGET_OBJ) $(OBJS) $(LDFLAGS) -o $@
 
 .PHONY: clean
 clean:
