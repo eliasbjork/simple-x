@@ -34,7 +34,7 @@ static inline void _init_uart() {
     *(uart_base + REG_LCR) = 0x80;
 
     // set divisor regs
-    uint32_t baud_rate_divisor = *clk_freq_hz/BAUD_RATE >> 4;
+    uint32_t baud_rate_divisor = (*clk_freq_hz/BAUD_RATE) >> 4;
     *(uart_base + REG_BRDL) = (uint8_t)baud_rate_divisor;
 
     // 8 data bits, 1 stop bit, no parity, clear DLAB
@@ -62,4 +62,21 @@ void _putchar(char c) {
 
     // write byte to UART
     *uart_base = c;
+}
+
+
+int getch() {
+    volatile uint8_t line_status;
+
+    if (!uart_initialized) {
+        _init_uart();
+    }
+
+    // await data in UART FIFO
+    do {
+        line_status = *(uart_base + REG_LSR);
+    } while (!(line_status & 0x01));
+
+    // read byte from UART
+    return *uart_base;
 }
