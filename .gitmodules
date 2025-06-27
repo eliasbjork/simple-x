@@ -3,4 +3,4 @@
 	url = git@github.com:mpaland/printf.git
 [submodule "sw/ext/mini-scanf"]
 	path = sw/ext/mini-scanf
-	url = git@github.com:MuratovAS/mini-scanf.git
+	url = git@github.com:eliasbjork/mini-scanf.git
