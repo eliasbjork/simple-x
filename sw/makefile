@@ -24,7 +24,8 @@ LDFLAGS = \
 OBJS = \
 	crt/crt.o \
 	lib/uartio.o \
-	ext/printf/printf.o
+	ext/printf/printf.o \
+	ext/mini-scanf/c_scan.o
 
 DEFINES = \
 	-DPRINTF_DISABLE_SUPPORT_LONG_LONG \
@@ -40,4 +41,4 @@ $(TARGET_ELF): $(TARGET_OBJ) $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o **/*.o *.elf **/*.elf *.ub **/*.ub ext/printf/printf.o
+	rm -f *.o **/*.o *.elf **/*.elf *.ub **/*.ub ext/printf/printf.o ext/mini-scanf/c_scan.o

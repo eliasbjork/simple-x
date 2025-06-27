@@ -6,6 +6,10 @@
 *.o
 *.out
 
+# Python
+env/
+venv/
+
 # FuseSoC
 fusesoc.conf
 fusesoc_libraries/
