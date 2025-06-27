@@ -10,6 +10,8 @@ VEERWOLF_SW = $(VEERWOLF_ROOT)/sw
 VEERWOLF_DATA = $(VEERWOLF_ROOT)/data
 TARGET ?= $(VEERWOLF_SW)/blinky.vh
 TARGET_ELF = $(basename $(TARGET)).elf
+# ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
+.PRECIOUS: $(TARGET_ELF)
 ## uImage to flash
 TARGET_UB = $(basename $(TARGET)).ub
 ## symlink to the last program that was flashed
@@ -30,28 +32,26 @@ CFLAGS = -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -g -Os -Wall
 LDFLAGS = -Tsw/crt/link.ld
 
 
-
-.PHONY: synth flash program debug gdb objdump clean
-
-# ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
-.PRECIOUS: $(TARGET_ELF)
-
 #all: synth program debug
 
 
 ### build hardware
 
+.PHONY: synth
 synth: $(VEERWOLF_SW)/bootloader.vh
 	fusesoc run --build --target=$(BOARD) --flag=cpu_el2 veerwolf --bootrom_file=$(VEERWOLF_SW)/bootloader.vh
 
+.PHONY: flash
 flash: $(TARGET_UB)
 	openocd -c "set BINFILE $(TARGET_UB)" -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_write_flash.cfg
 	mkdir -p .temp
 	ln -sf $(shell realpath --relative-to=.temp $(TARGET_ELF)) $(LAST_FLASHED_ELF)
 
+.PHONY: program
 program:
 	openocd -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_program.cfg
 
+.PHONY: debug
 debug: program
 	openocd -f $(VEERWOLF_DATA)/veerwolf_$(BOARD)_debug.cfg
 
@@ -67,6 +67,9 @@ debug: program
 %.elf: %.S
 	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
 
+sw/%.elf: sw/%.c
+	make -C sw TARGET=$(notdir $@)
+
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
 
@@ -76,9 +79,11 @@ debug: program
 
 ### tools
 
+.PHONY: gdb
 gdb: $(LAST_FLASHED_ELF)
 	@$(GDB) --command=openocd.gdb $(LAST_FLASHED_ELF)
 
+.PHONY: objdump
 objdump: $(LAST_FLASHED_ELF)
 	@$(OBJDUMP) -D $(LAST_FLASHED_ELF)
 
@@ -94,6 +99,12 @@ $(LAST_FLASHED_ELF):
 	@echo "	make flash"
 	@exit 1
 
+.PHONY: clean
 clean:
-	rm -rf build/ .temp/ *.jou *.log .Xil/
 	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
+	make -C sw clean
+	rm -rf .temp/
+
+.PHONY: clean_all
+clean_all: clean
+	rm -rf build/ *.jou *.log .Xil/
