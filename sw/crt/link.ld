@@ -14,7 +14,8 @@ MEMORY
   ram (rwx) : ORIGIN = 0x00000000, LENGTH = 128M
 }
 
-_stack = ALIGN(16) + 0x2000;
+/* stack begins at end of ram */
+_stack = ORIGIN(ram) + LENGTH(ram);
 
 SECTIONS
 {
