@@ -23,6 +23,7 @@ LDFLAGS = \
 
 OBJS = \
 	crt/crt.o \
+	lib/fmath.o \
 	lib/mem.o \
 	lib/uartio.o \
 	ext/printf/printf.o \
