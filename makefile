@@ -68,7 +68,7 @@ debug: program
 	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
 
 sw/%.elf: sw/%.c
-	make -C sw TARGET=$(notdir $@)
+	make -C sw TARGET=$(notdir $@) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX)
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
