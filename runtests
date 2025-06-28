@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+cd sw/simplex
+python runtests.py $(tio --list | grep UART)
+cd ../..
