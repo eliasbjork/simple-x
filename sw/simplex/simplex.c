@@ -289,34 +289,38 @@ int main() {
     int m;
     int n;
 
-    scanf("%d %d", &m, &n);
+    for (;;) {
+        scanf("%d %d", &m, &n);
 
-    // printf("m = %d ; n = %d\n", m, n);
+        // printf("m = %d ; n = %d\n", m, n);
 
-    float** a = make_matrix(m, n+1);
-    float b[m];
-    float c[n];
+        float** a = make_matrix(m, n+1);
+        float b[m];
+        float c[n];
 
-    float x[n+1];
-    float y = 0;
+        float x[n+1];
+        float y = 0;
 
-    scan_vec(c, n);
-    scan_matrix(a, m, n);
-    scan_vec(b, m);
+        scan_vec(c, n);
+        scan_matrix(a, m, n);
+        scan_vec(b, m);
 
-    float sol = simplex(m, n, a, b, c, x, y);
+        float sol = simplex(m, n, a, b, c, x, y);
 
-    if (!isnan(sol) && !isinf(sol)) {
-        printf("z = %lf\n", sol);
-    } else if (isinf(sol)) {
-        // the problem is unbounded 
-        printf("z = inf\n");
-    } else {
-        // the problem is infeasible
-        printf("z = nan\n");
+        if (!isnan(sol) && !isinf(sol)) {
+            printf("z = %lf\n", sol);
+        } else if (isinf(sol)) {
+            // the problem is unbounded 
+            printf("z = inf\n");
+        } else {
+            // the problem is infeasible
+            printf("z = nan\n");
+        }
+
+        free_matrix(a, m);
+
+        _reset_heap();
     }
-
-    free_matrix(a, m);
 
     return 0;
 }
