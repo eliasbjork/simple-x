@@ -43,4 +43,6 @@ $(TARGET_ELF): $(TARGET_OBJ) $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f *.o **/*.o *.elf **/*.elf *.ub **/*.ub ext/printf/printf.o ext/mini-scanf/c_scan.o
+	find . -name '*.o' -delete
+	find . -name '*.elf' -delete
+	find . -name '*.ub' -delete
