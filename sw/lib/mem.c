@@ -21,6 +21,11 @@ static inline void _align_heap_head() {
 }
 
 
+void _reset_heap() {
+    heap_head = (uintptr_t)&_heap_start;
+}
+
+
 void* __memset(void* dest, int ch, size_t count) {
     uint8_t fill_byte = (uint8_t)ch;
     uint8_t* end = (uint8_t*)dest + count;

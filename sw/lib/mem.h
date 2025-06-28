@@ -12,6 +12,6 @@ void* __memset(void*, int, size_t);
 void* __malloc(size_t);
 void* __calloc(size_t, size_t);
 void __free(void*);
-
+void _reset_heap();
 
 #endif // MEM_H
