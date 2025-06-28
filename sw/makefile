@@ -23,6 +23,7 @@ LDFLAGS = \
 
 OBJS = \
 	crt/crt.o \
+	lib/mem.o \
 	lib/uartio.o \
 	ext/printf/printf.o \
 	ext/mini-scanf/c_scan.o

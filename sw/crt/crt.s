@@ -2,7 +2,7 @@
 .global _start
 _start:
     # setup stack pointer
-    la sp, _stack
+    la sp, _stack_start
 
     # zero-initialize .bss section
     jal _init_bss

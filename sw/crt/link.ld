@@ -15,7 +15,7 @@ MEMORY
 }
 
 /* stack begins at end of ram */
-_stack = ORIGIN(ram) + LENGTH(ram);
+_stack_start = ORIGIN(ram) + LENGTH(ram);
 
 SECTIONS
 {
@@ -50,4 +50,7 @@ SECTIONS
     . = ALIGN(4);
     _bss_end = .;
   } > ram
+
+  . = ALIGN(4);
+  _heap_start = .;
 }
