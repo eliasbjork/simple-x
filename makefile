@@ -1,35 +1,33 @@
-# board config
+### board config
+
 BOARD ?= nexys_video
 FLASH_ADDR ?= 0x0
 RESET_VECTOR ?= 0x0
 
-# files
+### files
+
 WORKSPACE ?= $(shell pwd)
 VEERWOLF_ROOT ?= $(WORKSPACE)/fusesoc_libraries/veerwolf
 VEERWOLF_SW = $(VEERWOLF_ROOT)/sw
 VEERWOLF_DATA = $(VEERWOLF_ROOT)/data
-TARGET ?= $(VEERWOLF_SW)/blinky.vh
+TARGET ?= sw/hello_uart.c
 TARGET_ELF = $(basename $(TARGET)).elf
+
 # ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
 .PRECIOUS: $(TARGET_ELF)
-## uImage to flash
+
+# uImage to flash
 TARGET_UB = $(basename $(TARGET)).ub
-## symlink to the last program that was flashed
+
+# symlink to the last program that was flashed
 LAST_FLASHED_ELF = .temp/last_flashed.elf
 
-# C runtime
-OBJS = sw/crt/crt.o sw/lib/uartio.o
+### toolchain
 
-# toolchain
 TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
-CC = $(TOOLCHAIN_PREFIX)gcc
-#AS = $(TOOLCHAIN_PREFIX)as
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
 GDB = gdb-multiarch
-
-CFLAGS = -nostartfiles -march=rv32im_zicsr -mabi=ilp32 -g -Os -Wall
-LDFLAGS = -Tsw/crt/link.ld
 
 
 #all: synth program debug
@@ -58,17 +56,8 @@ debug: program
 
 ### build software
 
-%.elf: %.c
-	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -Tsw/crt/link.ld -o $@ sw/crt/crt.s $<
-
-%.elf: %.s
-	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
-
-%.elf: %.S
-	$(CC) $(CFLAGS) -nostartfiles -nolibc -march=rv32im_zicsr -mabi=ilp32 -T$(VEERWOLF_SW)/link.ld -o $@ $<
-
-sw/%.elf: sw/%.c
-	make -C sw TARGET=$(notdir $@) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX)
+%.elf:
+	make -C sw TARGET=../$@ TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX)
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
@@ -102,7 +91,9 @@ $(LAST_FLASHED_ELF):
 .PHONY: clean
 clean:
 	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
-	make -C sw clean
+	find . -name '*.o' -delete
+	find . -name '*.elf' -delete
+	find . -name '*.ub' -delete
 	rm -rf .temp/
 
 .PHONY: clean_all
