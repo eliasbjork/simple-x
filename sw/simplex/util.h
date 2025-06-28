@@ -1,24 +1,20 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <stdio.h>
-#include <stdlib.h>
+float** make_matrix(int m, int n);
 
+void free_matrix(float** a, int nbr_rows);
 
-double** make_matrix(int m, int n);
+void scan_vec(float v[], int len);
 
-void free_matrix(double** a, int nbr_rows);
+void scan_matrix(float** a, int m, int n);
 
-void scan_vec(double v[], int len);
+void print_vec(const float v[], int len);
 
-void scan_matrix(double** a, int m, int n);
+void print_matrix(float** const a, int m, int n);
 
-void print_vec(const double v[], int len);
+void print_obj_fun(const float c[], int len);
 
-void print_matrix(double** const a, int m, int n);
-
-void print_obj_fun(const double c[], int len);
-
-void print_constraints(const double** a, const double b[], int m, int n);
+void print_constraints(float** const a, const float b[], int m, int n);
 
 #endif // UTIL_H

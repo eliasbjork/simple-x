@@ -1,6 +1,12 @@
 TARGET ?= hello_uart.c
-TARGET_OBJ = $(basename $(TARGET)).o
-TARGET_ELF = $(basename $(TARGET)).elf
+
+ifeq ($(notdir $(TARGET)), simplex.elf)
+TARGET_OBJS = simplex/$(notdir $(basename $(TARGET)).o) simplex/util.o
+else
+TARGET_OBJS = $(basename $(TARGET)).o
+endif
+
+TARGET_ELF = $(basename $(firstword $(TARGET))).elf
 
 TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
 CC = $(TOOLCHAIN_PREFIX)gcc
@@ -12,7 +18,6 @@ CFLAGS = \
 	-nostartfiles \
 	-nostdlib \
 	-std=c18 \
-	-Os \
 	-Wall \
 	-g \
 	$(DEFINES)
@@ -38,8 +43,8 @@ DEFINES = \
 .PHONY: all
 all: $(TARGET_ELF)
 
-$(TARGET_ELF): $(TARGET_OBJ) $(OBJS)
-	$(CC) $(CFLAGS) $(TARGET_OBJ) $(OBJS) $(LDFLAGS) -o $@
+$(TARGET_ELF): $(TARGET_OBJS) $(OBJS)
+	$(CC) $(CFLAGS) $(TARGET_OBJS) $(OBJS) $(LDFLAGS) -o $@
 
 .PHONY: clean
 clean:

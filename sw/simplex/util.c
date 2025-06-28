@@ -1,36 +1,36 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "../lib/mem.h"
+#include "../lib/uartio.h"
 #include "util.h"
 
 
-double** make_matrix(int m, int n) {
-    double** a;
+float** make_matrix(int m, int n) {
+    float** a;
     int i;
 
-    a = calloc(m, sizeof(double*));
+    a = calloc(m, sizeof(float*));
 
     for (i=0; i<m; i++)
-        a[i] = calloc(n, sizeof(double));
+        a[i] = calloc(n, sizeof(float));
 
     return a;
 }
 
 
-void free_matrix(double** a, int nbr_rows) {
+void free_matrix(float** a, int nbr_rows) {
     for (int i=0; i<nbr_rows; i++)
         free(a[i]);
     free(a);
 }
 
 
-void scan_vec(double v[], int len) {
+void scan_vec(float v[], int len) {
     int i;
     for (i=0; i<len; i++)
         scanf("%lf", &v[i]);
 }
 
 
-void scan_matrix(double** a, int m, int n) {
+void scan_matrix(float** a, int m, int n) {
     int i,j;
     for (i=0; i<m; i++)
     {
@@ -42,7 +42,7 @@ void scan_matrix(double** a, int m, int n) {
 }
 
 
-void print_vec(const double v[], int len) {
+void print_vec(const float v[], int len) {
     int i;
     printf("\t");
     for (i=0; i<len; i++)
@@ -53,7 +53,7 @@ void print_vec(const double v[], int len) {
 }
 
 
-void print_matrix(double** const a, int m, int n) {
+void print_matrix(float** const a, int m, int n) {
     int i,j;
     for (i=0; i<m; i++)
     {
@@ -67,7 +67,7 @@ void print_matrix(double** const a, int m, int n) {
 }
 
 
-void print_obj_fun(const double c[], int len) {
+void print_obj_fun(const float c[], int len) {
     int i;
 
     printf("max z =\t");
@@ -79,7 +79,7 @@ void print_obj_fun(const double c[], int len) {
 }
 
 
-void print_constraints(const double** a, const double b[], int m, int n) {
+void print_constraints(float** const a, const float b[], int m, int n) {
     int i,j;
     for (i=0; i<m; i++)
     {

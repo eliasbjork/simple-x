@@ -1,30 +1,31 @@
-#include <math.h>
-#include <stdlib.h>
+#include "../lib/fmath.h"
+#include "../lib/mem.h"
+#include "../lib/uartio.h"
 #include "simplex.h"
 #include "util.h"
 
 
-static const double eps = 1e-6;
+static const float eps = 1e-6;
 
 
 struct simplex_t {
     int m;
     int n;
-    int* var;     // n+m+1
-    double** a;   // m x n+1
-    double* b;    // m
-    double* x;    // n+m
-    double* c;    // n
-    double y;
+    int* var;    // n+m+1
+    float** a;   // m x n+1
+    float* b;    // m
+    float* x;    // n+m
+    float* c;    // n
+    float y;
 };
 
 
-double simplex(int m, int n, double** a, double* b, double* c, double* x, double y) {
+float simplex(int m, int n, float** a, float* b, float* c, float* x, float y) {
     return xsimplex(m, n, a, b, c, x, y, NULL, 0);
 }
 
 
-double xsimplex(int m, int n, double** a, double* b, double* c, double* x, double y, int* var, int h) {
+float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int h) {
     simplex_t s;
     int i, row, col;
 
@@ -74,9 +75,9 @@ double xsimplex(int m, int n, double** a, double* b, double* c, double* x, doubl
 }
 
 
-int initial(simplex_t* s, int m, int n, double** a, double* b, double* c, double* x, double y, int* var) {
+int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var) {
     int i,j,k;
-    double w;
+    float w;
 
     k = init(s, m, n, a, b, c, x, y, var);
 
@@ -130,7 +131,7 @@ int initial(simplex_t* s, int m, int n, double** a, double* b, double* c, double
     n = s->n-1;
     s->n = s->n-1;
 
-    double* t = calloc(n, sizeof(double));
+    float* t = calloc(n, sizeof(float));
 
     for (k = 0; k < n; k++) {
         for (j = 0; j < n; j++)
@@ -164,7 +165,7 @@ int initial(simplex_t* s, int m, int n, double** a, double* b, double* c, double
 }
 
 
-int init(simplex_t* s, int m, int n, double** a, double* b, double* c, double* x, double y, int* var) {
+int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var) {
     int i, k;
 
     s->m = m;
@@ -208,8 +209,8 @@ void prepare(simplex_t* s, int k) {
     for (i = 0; i < m; i++)
         s->a[i][n-1] = -1;
 
-    s->x = calloc(m+n, sizeof(double));
-    s->c = calloc(n, sizeof(double));
+    s->x = calloc(m+n, sizeof(float));
+    s->c = calloc(n, sizeof(float));
 
     s->c[n-1] = -1;
     s->n = n;
@@ -219,9 +220,9 @@ void prepare(simplex_t* s, int k) {
 
 
 void pivot(simplex_t* s, int row, int col) {
-    double** a = s->a;
-    double* b = s->b;
-    double* c = s->c;
+    float** a = s->a;
+    float* b = s->b;
+    float* c = s->c;
     int m = s->m;
     int n = s->n;
     int i,j,t;
@@ -292,18 +293,18 @@ int main() {
 
     // printf("m = %d ; n = %d\n", m, n);
 
-    double** a = make_matrix(m, n+1);
-    double b[m];
-    double c[n];
+    float** a = make_matrix(m, n+1);
+    float b[m];
+    float c[n];
 
-    double x[n+1];
-    double y = 0;
+    float x[n+1];
+    float y = 0;
 
     scan_vec(c, n);
     scan_matrix(a, m, n);
     scan_vec(b, m);
 
-    double sol = simplex(m, n, a, b, c, x, y);
+    float sol = simplex(m, n, a, b, c, x, y);
 
     if (!isnan(sol) && !isinf(sol)) {
         printf("z = %lf\n", sol);
