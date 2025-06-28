@@ -1,0 +1,6 @@
+[submodule "sw/ext/printf"]
+	path = sw/ext/printf
+	url = git@github.com:mpaland/printf.git
+[submodule "sw/ext/mini-scanf"]
+	path = sw/ext/mini-scanf
+	url = git@github.com:eliasbjork/mini-scanf.git
