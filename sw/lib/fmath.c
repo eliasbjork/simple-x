@@ -12,7 +12,7 @@ union f_to_u32 {
 inline float __fabs(float f) {
     f_to_u32 x;
     x.f = f;
-    x.u32 &= 0xffffffff >> 1;
+    x.u32 &= 0xFFFFFFFF >> 1;
     return x.f;
 }
 
