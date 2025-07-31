@@ -1,6 +1,17 @@
+#ifndef VEERWOLF
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#else
+
 #include "../lib/fmath.h"
 #include "../lib/mem.h"
 #include "../lib/uartio.h"
+
+#endif
+
 #include "simplex.h"
 #include "util.h"
 
@@ -289,7 +300,9 @@ int main() {
     int m;
     int n;
 
+#ifdef VEERWOLF
     for (;;) {
+#endif
         scanf("%d %d", &m, &n);
 
         // printf("m = %d ; n = %d\n", m, n);
@@ -319,8 +332,10 @@ int main() {
 
         free_matrix(a, m);
 
+#ifdef VEERWOLF
         _reset_heap();
     }
+#endif
 
     return 0;
 }

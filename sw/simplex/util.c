@@ -1,5 +1,15 @@
+#ifndef VEERWOLF
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#else
+
 #include "../lib/mem.h"
 #include "../lib/uartio.h"
+
+#endif
+
 #include "util.h"
 
 
