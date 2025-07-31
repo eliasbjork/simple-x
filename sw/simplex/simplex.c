@@ -16,7 +16,7 @@
 #include "util.h"
 
 
-static const float EPSILON = 1e-6;
+static const float EPSILON = 1e-5;
 
 
 struct simplex_t {
