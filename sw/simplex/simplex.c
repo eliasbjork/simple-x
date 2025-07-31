@@ -274,24 +274,21 @@ void pivot(simplex_t* s, int row, int col) {
 
 
 int select_nonbasic(simplex_t s) {
-    int i;
-    for (i=0; i<s.n; i++)       // använd dantzig's regel dvs välj i med störst c[i] först. jämför skillnad i tidsåtgång
-        if (s.c[i] > EPSILON)
-            return i;
-    return -1;
-}
-
-
-/* Use Dantzig's rule to select nonbasic i.e. always pick the steepest direction (i corresponding to largest c[i]) */
-int select_nonbasic_dantzig_rule(simplex_t s) {
     int i, max;
 
-    for (max = 0, i=1; i<s.n; i++)
-        if (s.c[max] < s.c[i])
-            max = i;
+    // Dantzig's rule i.e. always pick the steepest direction
+    // (i corresponding to largest c[i])
 
-    if (s.c[max] > EPSILON)
+    for (max = 0, i = 1; i < s.n; i++) {
+        if (s.c[max] < s.c[i]) {
+            max = i;
+        }
+    }
+
+    if (s.c[max] > EPSILON) {
         return max;
+    }
+
     return -1;
 }
 
