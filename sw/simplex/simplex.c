@@ -16,7 +16,7 @@
 #include "util.h"
 
 
-static const float eps = 1e-6;
+static const float EPSILON = 1e-6;
 
 
 struct simplex_t {
@@ -50,7 +50,7 @@ float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, i
 
         // find which constraint is tightest for non-basic with index col
         for (i = 0; i < m; i++) {
-            if (a[i][col] > eps && (row < 0 || b[i]/a[i][col] < b[row]/a[row][col])) {
+            if (a[i][col] > EPSILON && (row < 0 || b[i]/a[i][col] < b[row]/a[row][col])) {
                 row = i;
             }
         }
@@ -102,7 +102,7 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
 
     for (i = 0; i < m+n; i++)
         if (s->var[i] == m+n-1) {
-            if (fabs(s->x[i]) > eps) {
+            if (fabs(s->x[i]) > EPSILON) {
                 free(s->x);
                 free(s->c);
                 return 0; // infeasible
@@ -276,7 +276,7 @@ void pivot(simplex_t* s, int row, int col) {
 int select_nonbasic(simplex_t s) {
     int i;
     for (i=0; i<s.n; i++)       // använd dantzig's regel dvs välj i med störst c[i] först. jämför skillnad i tidsåtgång
-        if (s.c[i] > eps)
+        if (s.c[i] > EPSILON)
             return i;
     return -1;
 }
@@ -290,7 +290,7 @@ int select_nonbasic_dantzig_rule(simplex_t s) {
         if (s.c[max] < s.c[i])
             max = i;
 
-    if (s.c[max] > eps)
+    if (s.c[max] > EPSILON)
         return max;
     return -1;
 }
