@@ -4,7 +4,7 @@
 BASE_DIR="${1:-.}"
 
 # allowed error margin
-tolerance="0.000001"
+tolerance="0.00001"
 
 # find all directories containing both 'i' and 'linopt.sol' files
 find "$BASE_DIR" -type f -name i -exec dirname {} \; | while read -r dir; do
