@@ -14,4 +14,4 @@ test: all
 	pytest -v
 
 clean:
-	rm -rf a.out *.o
+	rm -rf simplex *.o
