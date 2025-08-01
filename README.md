@@ -149,7 +149,7 @@ Look for something including UART and run
 ```shell
 tio -b 115200 -d 8 -s 1 -p none --map INLCRNL <port>
 ```
-to connect to it. In fact, the settings given here for baud rate, data bits, stop bits and parity are the defaults in `tio`, but are given explicitly to match VeeRwolf. The `--map INLCRNL` flag maps recieved newline characters to carriage return + newline. Thus, if there are no other UART devices connected, it should be sufficient to run
+to connect to it. In fact, the settings given here for baud rate, data bits, stop bits and parity are the defaults in `tio`, but are given explicitly to match VeeRwolf. The `--map INLCRNL` flag maps recieved newline characters to carriage return + newline. If there are no other UART devices connected, it should be sufficient to run
 ```sh
 tio --map INLCRNL $(tio --list | grep UART)
 ```
