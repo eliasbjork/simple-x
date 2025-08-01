@@ -3,6 +3,7 @@ import math
 import os
 import pathlib
 import pytest
+import serial
 import subprocess
 import textwrap
 
@@ -18,11 +19,7 @@ def collect_test_dirs():
     return dirs_with_tests
 
 
-@pytest.mark.parametrize("dir", collect_test_dirs())
-def test_linopt(dir):
-    input_path = pathlib.Path(f"{dir}")/"i"
-    sol_path = pathlib.Path(f"{dir}")/"linopt.sol"
-
+def run_test_on_host(input_path):
     proc = subprocess.run(
         ["./simplex"],
         input=input_path.read_bytes(),
@@ -30,10 +27,44 @@ def test_linopt(dir):
         stderr=subprocess.PIPE
     )
 
+    return proc.stdout
+
+
+def run_test_on_veerwolf(input_path, port, baudrate):
+    if not port:
+        raise RuntimeError("Serial port must be supplied with --port")
+
+    with serial.Serial(port, baudrate) as s:
+        # transmit test input
+        with open(input_path, "r") as f:
+            for line in f:
+                byte_str = line.encode("utf-8")
+                s.write(byte_str)
+                s.flush()
+
+        # await response
+        while not s.in_waiting:
+            continue
+
+        return s.read(s.in_waiting)
+
+
+@pytest.mark.parametrize("dir", collect_test_dirs())
+def test_linopt(dir, platform, port, baudrate):
+    input_path = pathlib.Path(f"{dir}")/"i"
+    sol_path = pathlib.Path(f"{dir}")/"linopt.sol"
+
+    if platform == "host":
+        res_bytes = run_test_on_host(input_path)
+    elif platform == "veerwolf":
+        res_bytes = run_test_on_veerwolf(input_path, port, baudrate)
+    else:
+        raise RuntimeError("Unknown platform")
+
     try:
-        res_str = proc.stdout.decode("utf-8", "strict")
+        res_str = res_bytes.decode("utf-8", "strict")
     except UnicodeDecodeError:
-        pytest.fail("Failed decoding simplex output.")
+        pytest.fail("Failed decoding simplex output")
 
     res = float(res_str.split(" ")[-1])
 
