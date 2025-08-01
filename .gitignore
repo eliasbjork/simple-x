@@ -9,6 +9,7 @@
 # Python
 env/
 venv/
+__pycache__/
 
 # FuseSoC
 fusesoc.conf
