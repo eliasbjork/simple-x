@@ -28,6 +28,8 @@ struct simplex_t {
     float* x;    // n+m
     float* c;    // n
     float y;
+    int prev_p;
+    int prev_q;
 };
 
 
@@ -189,9 +191,9 @@ int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, fl
     s->y = y;
 
     if (var == NULL) {
-        var = calloc(m+n+1, sizeof(int)); // borde man checka så det inte blir NULL igen?
+        var = calloc(m+n+2, sizeof(int));
 
-        for (i = 0; i < m+n; i++)
+        for (i = 0; i < m+n+1; i++)
             var[i] = i;
     }
     s->var = var;
@@ -211,14 +213,17 @@ void prepare(simplex_t* s, int k) {
     int i;
 
     for (i = m+n; i > n; i--)
+    // for (i = m+n; i > n+1; i--)
         s->var[i] = s->var[i-1];
 
     s->var[n] = m+n;
+    // s->var[n+1] = m+n+1;
 
     n = n+1;
 
     for (i = 0; i < m; i++)
         s->a[i][n-1] = -1;
+        // s->a[i][n] = -1;
 
     s->x = calloc(m+n, sizeof(float));
     s->c = calloc(n, sizeof(float));
@@ -226,50 +231,69 @@ void prepare(simplex_t* s, int k) {
     s->c[n-1] = -1;
     s->n = n;
 
+    // zero the n+1 column, to be used by pivot
+    for (i = 0; i < m; i++)
+        s->a[i][n] = 0;
+        // s->a[i][n-1] = 0;
+
+    s->prev_p = 0;
+    s->prev_q = n-1;
+
     pivot(s, k, n-1);
 }
 
 
-void pivot(simplex_t* s, int row, int col) {
+void pivot(simplex_t* s, int p, int q) {
     float** a = s->a;
     float* b = s->b;
     float* c = s->c;
     int m = s->m;
     int n = s->n;
     int i,j,t;
+    float a_pq_inv, a_iq;
 
-    t = s->var[col];
-    s->var[col] = s->var[n+row];
-    s->var[n+row] = t;
+    // p and q are the indices of the pivot row and column, respectively
 
-    s->y = s->y + c[col]*b[row]/a[row][col];
+    printf("p = %d, q = %d\n", p, q);
 
-    for (i = 0; i < n; i++)
-        if (i != col)
-            c[i] = c[i] - c[col]*a[row][i]/a[row][col];
+    t = s->var[s->prev_q];
+    s->var[s->prev_q] = s->var[n+p];
+    s->var[n+p] = t;
 
-    c[col] = -c[col]/a[row][col];
+    // setup extra column
+    a[s->prev_p][s->prev_q] = 0;
+    a[p][s->prev_q] = 1;
 
-    for (i = 0; i < m; i++)
-        if (i != row)
-            b[i] = b[i] - a[i][col]*b[row]/a[row][col];
+    print_matrix(a, m, n+2);
 
-    for (i = 0; i < m; i++)
-        if (i != row)
-            for (j = 0; j < n; j++)
-                if (j != col)
-                    a[i][j] = a[i][j] - a[i][col]*a[row][j]/a[row][col];
+    a_pq_inv = 1/a[p][q];
 
-    for ( i = 0; i < m; i++)
-        if (i != row)
-            a[i][col] = -a[i][col]/a[row][col];
+    s->y = s->y + c[q]*b[p]*a_pq_inv;
 
     for (i = 0; i < n; i++)
-        if (i != col)
-            a[row][i] = a[row][i]/a[row][col];
+        if (i != q)
+            c[i] = c[i] - c[q]*a[p][i]*a_pq_inv;
 
-    b[row] = b[row]/a[row][col];
-    a[row][col] = 1/a[row][col];
+    c[q] = -c[q]*a_pq_inv;
+
+    for (i = 0; i < m; i++)
+        if (i != p)
+            b[i] = b[i] - a[i][q]*b[p]*a_pq_inv;
+
+    b[p] = b[p]*a_pq_inv;
+
+    for (i = 0; i < n+1; i++)
+        a[p][i] = a[p][i]*a_pq_inv;
+
+    for (i = 0; i < m; i++)
+        if (i != p) {
+            a_iq = a[i][q];
+            for (j = 0; j < n+1; j++)
+                a[i][j] = a[i][j] - a_iq*a[p][j];
+        }
+
+    s->prev_p = p;
+    s->prev_q = q;
 }
 
 
@@ -304,7 +328,7 @@ int main() {
 
         // printf("m = %d ; n = %d\n", m, n);
 
-        float** a = make_matrix(m, n+1);
+        float** a = make_matrix(m, n+2);
         float b[m];
         float c[n];
 
