@@ -34,22 +34,22 @@ struct simplex_t {
 
 
 float simplex(int m, int n, float** a, float* b, float* c, float* x, float y) {
-    return xsimplex(m, n, a, b, c, x, y, NULL, 0);
+    return xsimplex(m, n, a, b, c, x, y, NULL,0, n+1, 0);
 }
 
 
-float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int h) {
+float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int prev_p, int prev_q, int h) {
     simplex_t s;
     int i, row, col;
 
-    if (!(initial(&s, m, n, a, b, c, x, y, var))) {
+    if (!(initial(&s, m, n, a, b, c, x, y, var, prev_p, prev_q))) {
         free(s.var);
         return NAN;
     }
 
     while (col = select_nonbasic(s), col >= 0) {
         row = -1;
-
+        
         // find which constraint is tightest for non-basic with index col
         for (i = 0; i < m; i++) {
             if (a[i][col] > EPSILON && (row < 0 || b[i]/a[i][col] < b[row]/a[row][col])) {
@@ -62,7 +62,7 @@ float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, i
             free(s.var);
             return INFINITY;
         }
-
+        printf("h = %d\n", h);
         pivot(&s, row, col);
     }
 
@@ -88,11 +88,11 @@ float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, i
 }
 
 
-int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var) {
+int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int prev_p, int prev_q) {
     int i,j,k;
     float w;
 
-    k = init(s, m, n, a, b, c, x, y, var);
+    k = init(s, m, n, a, b, c, x, y, var, prev_p, prev_q);
 
     if (b[k] >= 0)
         return 1; // feasible solution
@@ -100,7 +100,7 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
     prepare(s, k);
     n = s->n;
 
-    s->y = xsimplex(m, n, s->a, s->b, s->c, s->x, 0, s->var, 1);
+    s->y = xsimplex(m, n, s->a, s->b, s->c, s->x, 0, s->var, s->prev_p, s->prev_q, 1);
 
     for (i = 0; i < m+n; i++)
         if (s->var[i] == m+n-1) {
@@ -127,6 +127,12 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
         s->var[i] = s->var[n-1];
         s->var[n-1] = k;
 
+        if(i == s->prev_q){
+            s->prev_q = n-1;
+        } else if(n-1 == s->prev_q){
+            s->prev_q = i;
+        }
+
         for (k = 0; k < m; k++) {
             w = s->a[k][n-1];
             s->a[k][n-1] = s->a[k][i];
@@ -143,6 +149,7 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
 
     n = s->n-1;
     s->n = s->n-1;
+    s->prev_q = n;
 
     float* t = calloc(n, sizeof(float));
 
@@ -178,7 +185,7 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
 }
 
 
-int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var) {
+int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int prev_p, int prev_q) {
     int i, k;
 
     s->m = m;
@@ -189,14 +196,19 @@ int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, fl
     s->x = x;
     s->c = c;
     s->y = y;
+    s->prev_p = prev_p;
+    s->prev_q = prev_q;
 
     if (var == NULL) {
-        var = calloc(m+n+2, sizeof(int));
+        printf("Initializing variable mapping\n");
+        var = calloc(m+n+1, sizeof(int));
 
         for (i = 0; i < m+n+1; i++)
             var[i] = i;
+
     }
     s->var = var;
+
 
     for (k = 0, i = 1; i < m; i++) {
         if (b[i] < b[k])
@@ -231,13 +243,6 @@ void prepare(simplex_t* s, int k) {
     s->c[n-1] = -1;
     s->n = n;
 
-    // zero the n+1 column, to be used by pivot
-    for (i = 0; i < m; i++)
-        s->a[i][n] = 0;
-        // s->a[i][n-1] = 0;
-
-    s->prev_p = 0;
-    s->prev_q = n-1;
 
     pivot(s, k, n-1);
 }
@@ -253,28 +258,45 @@ void pivot(simplex_t* s, int p, int q) {
     float a_pq_inv, a_iq;
 
     // p and q are the indices of the pivot row and column, respectively
+    for (i = 0; i < m+n; i++)
+        printf("%d ", s->var[i]);
+    printf("\n");
+    printf("p = %d, q = %d\n", p, q);
 
-    //printf("p = %d, q = %d\n", p, q);
+    printf("prev_p = %d, prev_q = %d\n", s->prev_p, s->prev_q);
 
     t = s->var[s->prev_q];
     s->var[s->prev_q] = s->var[n+p];
     s->var[n+p] = t;
 
+    for (i = 0; i < m+n; i++)
+        printf("%d ", s->var[i]);
+    printf("\n");
+
     // setup extra column
     a[s->prev_p][s->prev_q] = 0;
     a[p][s->prev_q] = 1;
 
-    //print_matrix(a, m, n+2);
+    print_matrix(a, m, n+1);
 
     a_pq_inv = 1/a[p][q];
+    int q_lt_prev_q = (q > s->prev_q);
 
-    s->y = s->y + c[q]*b[p]*a_pq_inv;
+    s->y = s->y + c[q-q_lt_prev_q]*b[p]*a_pq_inv;
 
-    for (i = 0; i < n; i++)
-        if (i != q)
-            c[i] = c[i] - c[q]*a[p][i]*a_pq_inv;
+    int past_temp;
+    int index;
+    for (i = 0, past_temp = 0; i < n; i++) {
+        if (i == s->prev_q)
+            past_temp = 1;
 
-    c[q] = -c[q]*a_pq_inv;
+        index = i - past_temp;
+        if (i != q && i != s->prev_q)
+            c[index] = c[index] - c[q-q_lt_prev_q]*a[p][i]*a_pq_inv;
+
+    }
+
+    c[q-q_lt_prev_q] = -c[q-q_lt_prev_q]*a_pq_inv;
 
     for (i = 0; i < m; i++)
         if (i != p)
@@ -291,9 +313,23 @@ void pivot(simplex_t* s, int p, int q) {
             for (j = 0; j < n+1; j++)
                 a[i][j] = a[i][j] - a_iq*a[p][j];
         }
-
+    
+    //testar om det fungerar att flytta skiten alltid till n-1
+    float temp;
+    for (int i = 0; i < m; i++)
+        {
+            temp = a[i][n-1];
+            a[i][n-1] = a[i][q];
+            a[i][q] = temp;
+        }
+    t = s->var[q];
+    s->var[q] = s->var[n-1];
+    s->var[n-1] = t;
     s->prev_p = p;
-    s->prev_q = q;
+    //s->prev_q = q;
+    printf("After pivoting:\n");
+    print_matrix(a, m, n+1);
+    printf("\n\n");
 }
 
 
@@ -302,15 +338,21 @@ int select_nonbasic(simplex_t s) {
 
     // Dantzig's rule i.e. always pick the steepest direction
     // (i corresponding to largest c[i])
-
+    print_vec(s.c, s.n);
     for (max = 0, i = 1; i < s.n; i++) {
         if (s.c[max] < s.c[i]) {
             max = i;
         }
     }
-
+    printf("select_nonbasic: max = %d, c[max] = %f, prev_q = %d\n", max, s.c[max], s.prev_q);
     if (s.c[max] > EPSILON) {
-        return max;
+        if (max < s.prev_q) {
+            return max;
+        }else
+        {
+            return max + 1;
+        }
+        
     }
 
     return -1;
@@ -338,6 +380,7 @@ int main() {
         scan_vec(c, n);
         scan_matrix(a, m, n);
         scan_vec(b, m);
+
 
         float sol = simplex(m, n, a, b, c, x, y);
 
