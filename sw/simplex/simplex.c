@@ -254,7 +254,7 @@ void pivot(simplex_t* s, int p, int q) {
 
     // p and q are the indices of the pivot row and column, respectively
 
-    printf("p = %d, q = %d\n", p, q);
+    //printf("p = %d, q = %d\n", p, q);
 
     t = s->var[s->prev_q];
     s->var[s->prev_q] = s->var[n+p];
@@ -264,7 +264,7 @@ void pivot(simplex_t* s, int p, int q) {
     a[s->prev_p][s->prev_q] = 0;
     a[p][s->prev_q] = 1;
 
-    print_matrix(a, m, n+2);
+    //print_matrix(a, m, n+2);
 
     a_pq_inv = 1/a[p][q];
 
