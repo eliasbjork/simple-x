@@ -265,16 +265,16 @@ void pivot(simplex_t* s, int p, int q) {
 
     printf("prev_p = %d, prev_q = %d\n", s->prev_p, s->prev_q);
 
-    t = s->var[s->prev_q];
-    s->var[s->prev_q] = s->var[n+p];
-    s->var[n+p] = t;
+    // t = s->var[s->prev_q];
+    // s->var[s->prev_q] = s->var[n+p];
+    // s->var[n+p] = t;
 
     for (i = 0; i < m+n; i++)
         printf("%d ", s->var[i]);
     printf("\n");
 
     // setup extra column
-    a[s->prev_p][s->prev_q] = 0;
+    //a[s->prev_p][s->prev_q] = 0;
     a[p][s->prev_q] = 1;
 
     print_matrix(a, m, n+1);
@@ -311,24 +311,32 @@ void pivot(simplex_t* s, int p, int q) {
         if (i != p) {
             a_iq = a[i][q];
             for (j = 0; j < n+1; j++)
-                a[i][j] = a[i][j] - a_iq*a[p][j];
+                if (j != q)
+                    a[i][j] = a[i][j] - a_iq*a[p][j];
         }
     
+    for (i = 0; i < m; i++){
+        a[i][q] = a[i][s->prev_q];
+        a[i][s->prev_q] = 0;
+    }
     //testar om det fungerar att flytta skiten alltid till n-1
-    float temp;
-    for (int i = 0; i < m; i++)
-        {
-            temp = a[i][n-1];
-            a[i][n-1] = a[i][q];
-            a[i][q] = temp;
-        }
+    // float temp;
+    // for (int i = 0; i < m; i++)
+    //     {
+    //         temp = a[i][s->prev_q];
+    //         a[i][s->prev_q] = a[i][q];
+    //         a[i][q] = temp;
+    //     }
     t = s->var[q];
-    s->var[q] = s->var[n-1];
-    s->var[n-1] = t;
-    s->prev_p = p;
+    s->var[q] = s->var[n+p];
+    s->var[n+p] = t;
     //s->prev_q = q;
     printf("After pivoting:\n");
     print_matrix(a, m, n+1);
+        printf("\n");
+
+    for (i = 0; i < m+n; i++)
+        printf("%d ", s->var[i]);
     printf("\n\n");
 }
 
