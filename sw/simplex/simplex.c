@@ -274,7 +274,11 @@ void pivot(simplex_t* s, int p, int q) {
     printf("\n");
 
     // setup extra column
-    //a[s->prev_p][s->prev_q] = 0;
+    for (int i = 0; i < m; i++)
+    {
+        a[i][s->prev_q] = 0;
+    }
+    
     a[p][s->prev_q] = 1;
 
     print_matrix(a, m, n+1);
@@ -317,7 +321,6 @@ void pivot(simplex_t* s, int p, int q) {
     
     for (i = 0; i < m; i++){
         a[i][q] = a[i][s->prev_q];
-        a[i][s->prev_q] = 0;
     }
     //testar om det fungerar att flytta skiten alltid till n-1
     // float temp;
