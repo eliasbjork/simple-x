@@ -1,6 +1,8 @@
 # Binaries
 *.elf
 *.ub
+*.hex
+*.sym
 
 # C
 *.o
