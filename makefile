@@ -10,8 +10,12 @@ WORKSPACE ?= $(shell pwd)
 VEERWOLF_ROOT ?= $(WORKSPACE)/fusesoc_libraries/veerwolf
 VEERWOLF_SW = $(VEERWOLF_ROOT)/sw
 VEERWOLF_DATA = $(VEERWOLF_ROOT)/data
-TARGET ?= sw/hello_uart.c
+TARGET ?= sw/hello_world.c
 TARGET_ELF = $(basename $(TARGET)).elf
+TARGET_HEX = $(basename $(TARGET)).hex
+TARGET_SYM = $(basename $(TARGET)).sym
+TEST = $(notdir $(basename $(TARGET)))
+EL2_ROOT = $(WORKSPACE)/hw/Cores-VeeR-EL2
 
 # ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
 .PRECIOUS: $(TARGET_ELF)
@@ -28,7 +32,10 @@ TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
 OBJCOPY = $(TOOLCHAIN_PREFIX)objcopy
 OBJDUMP = $(TOOLCHAIN_PREFIX)objdump
 GDB = gdb-multiarch
+NM = $(TOOLCHAIN_PREFIX)nm
 
+# build software for veerwolf or el2sim
+PLATFORM ?= veerwolf
 
 #all: synth program debug
 
@@ -57,13 +64,28 @@ debug: program
 ### build software
 
 %.elf:
-	make -C sw TARGET=../$@ TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX)
+	$(MAKE) -C sw TARGET=../$@ TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) PLATFORM=$(PLATFORM)
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
 
 %.ub: %.bin
 	mkimage -A riscv -C none -T standalone -a $(FLASH_ADDR) -e $(RESET_VECTOR) -n '$@' -d $< $@
+
+%.hex: %.elf
+	$(OBJCOPY) -O verilog $< $@
+
+%.sym: %.elf
+	$(NM) -B -n $< > $@
+
+
+### simulate EL2
+
+.PHONY: el2sim
+el2sim: $(TARGET_HEX) $(TARGET_SYM)
+	cp $(TARGET_HEX) $(EL2_ROOT)/program.hex
+	cp $(TARGET_SYM) $(EL2_ROOT)/$(TEST).sym
+	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile verilator TEST=$(TEST) RV_ROOT=$(EL2_ROOT) SKIP_HEX_BUILD=1
 
 
 ### tools
@@ -80,7 +102,7 @@ objdump: $(LAST_FLASHED_ELF)
 ### misc
 
 $(VEERWOLF_SW)/bootloader.vh:
-	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) bootloader.vh
+	$(MAKE) -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) bootloader.vh
 
 # needed by gdb
 $(LAST_FLASHED_ELF):
@@ -90,10 +112,13 @@ $(LAST_FLASHED_ELF):
 
 .PHONY: clean
 clean:
-	make -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
+	$(MAKE) -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
+	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile clean
 	find . -name '*.o' -delete
 	find . -name '*.elf' -delete
 	find . -name '*.ub' -delete
+	find . -name '*.hex' -delete
+	find . -name '*.sym' -delete
 	rm -rf .temp/
 
 .PHONY: clean_all

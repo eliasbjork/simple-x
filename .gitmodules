@@ -4,3 +4,6 @@
 [submodule "sw/ext/mini-scanf"]
 	path = sw/ext/mini-scanf
 	url = git@github.com:eliasbjork/mini-scanf.git
+[submodule "hw/Cores-VeeR-EL2"]
+	path = hw/Cores-VeeR-EL2
+	url = git@github.com:eliasbjork/Cores-VeeR-EL2.git
