@@ -20,44 +20,45 @@ static const float EPSILON = 1e-5;
 
 
 struct simplex_t {
-    int m;
-    int n;
-    int* var;    // n+m+1
-    float** a;   // m x n+1
-    float* b;    // m
-    float* x;    // n+m
-    float* c;    // n
-    float y;
+    int m;       // num constraints
+    int n;       // num decision vars
+    int* var_at; // n+m+1 array mapping indices to original indices
+    float** a;   // m*(n+1) matrix
+    float* b;    // m bounds
+    float* x;    // n+m decision + slack vars
+    float* c;    // n constants
+    float y;     // objective function max value
+    int prev_q;  // prev pivot col
 };
 
 
 float simplex(int m, int n, float** a, float* b, float* c, float* x, float y) {
-    return xsimplex(m, n, a, b, c, x, y, NULL, 0);
+    return xsimplex(m, n, a, b, c, x, y, NULL, n+1, 0);
 }
 
 
-float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int h) {
+float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, int* var_at, int prev_q, int h) {
     simplex_t s;
     int i, row, col;
 
-    if (!(initial(&s, m, n, a, b, c, x, y, var))) {
-        free(s.var);
+    if (!(initial(&s, m, n, a, b, c, x, y, var_at, prev_q))) {
+        free(s.var_at);
         return NAN;
     }
 
     while (col = select_nonbasic(s), col >= 0) {
         row = -1;
-
-        // find which constraint is tightest for non-basic with index col
+        
+        // find which constraint is tightest for nonbasic with index col
         for (i = 0; i < m; i++) {
             if (a[i][col] > EPSILON && (row < 0 || b[i]/a[i][col] < b[row]/a[row][col])) {
                 row = i;
             }
         }
 
-        // if non of the constraints limits non-basic with index col
+        // if none of the constraints limits nonbasic with index col
         if (row < 0) {
-            free(s.var);
+            free(s.var_at);
             return INFINITY;
         }
 
@@ -66,16 +67,16 @@ float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, i
 
     if (h == 0) {
         for (i = 0; i < n; i++) {
-            if (s.var[i] < n) {
-                x[s.var[i]] = 0;
+            if (s.var_at[i] < n) {
+                x[s.var_at[i]] = 0;
             }
         }
         for (i = 0; i < m; i++) {
-            if (s.var[n+i] < n) {
-                x[s.var[n+i]] = s.b[i];
+            if (s.var_at[n+i] < n) {
+                x[s.var_at[n+i]] = s.b[i];
             }
         }
-        free(s.var);
+        free(s.var_at);
     } else {
         for (i = 0; i < n; i++)
             x[i] = 0;
@@ -86,11 +87,11 @@ float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, i
 }
 
 
-int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var) {
-    int i,j,k;
+int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var_at, int prev_q) {
+    int i, j, k;
     float w;
 
-    k = init(s, m, n, a, b, c, x, y, var);
+    k = init(s, m, n, a, b, c, x, y, var_at, prev_q);
 
     if (b[k] >= 0)
         return 1; // feasible solution
@@ -98,10 +99,10 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
     prepare(s, k);
     n = s->n;
 
-    s->y = xsimplex(m, n, s->a, s->b, s->c, s->x, 0, s->var, 1);
+    s->y = xsimplex(m, n, s->a, s->b, s->c, s->x, 0, s->var_at, s->prev_q, 1);
 
     for (i = 0; i < m+n; i++)
-        if (s->var[i] == m+n-1) {
+        if (s->var_at[i] == m+n-1) {
             if (fabs(s->x[i]) > EPSILON) {
                 free(s->x);
                 free(s->c);
@@ -121,9 +122,15 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
     }
 
     if (i < n-1) {
-        k = s->var[i];
-        s->var[i] = s->var[n-1];
-        s->var[n-1] = k;
+        k = s->var_at[i];
+        s->var_at[i] = s->var_at[n-1];
+        s->var_at[n-1] = k;
+
+        if (i == s->prev_q) {
+            s->prev_q = n-1;
+        } else if (n-1 == s->prev_q) {
+            s->prev_q = i;
+        }
 
         for (k = 0; k < m; k++) {
             w = s->a[k][n-1];
@@ -137,16 +144,17 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
     s->y = y;
 
     for (k = n-1; k < n+m-1; k++)
-        s->var[k] = s->var[k+1];
+        s->var_at[k] = s->var_at[k+1];
 
     n = s->n-1;
     s->n = s->n-1;
+    s->prev_q = n;
 
     float* t = calloc(n, sizeof(float));
 
     for (k = 0; k < n; k++) {
         for (j = 0; j < n; j++)
-            if (k == s->var[j]) {
+            if (k == s->var_at[j]) {
                 // x_k is nonbasic, add c_k
                 t[j] = t[j] + s->c[k];
                 goto next_k;
@@ -154,7 +162,7 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
 
         // x_k is basic
         for (j = 0; j < m; j++)
-            if (s->var[n+j] == k)
+            if (s->var_at[n+j] == k)
                 // x_k is at row j
                 break;
 
@@ -176,25 +184,25 @@ int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x,
 }
 
 
-int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var) {
+int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var_at, int prev_q) {
     int i, k;
 
     s->m = m;
     s->n = n;
-    // s->var = var;
     s->a = a;
     s->b = b;
     s->x = x;
     s->c = c;
     s->y = y;
+    s->prev_q = prev_q;
 
-    if (var == NULL) {
-        var = calloc(m+n+1, sizeof(int)); // borde man checka så det inte blir NULL igen?
+    if (var_at == NULL) {
+        var_at = calloc(m+n+1, sizeof(int));
 
-        for (i = 0; i < m+n; i++)
-            var[i] = i;
+        for (i = 0; i < m+n+1; i++)
+            var_at[i] = i;
     }
-    s->var = var;
+    s->var_at = var_at;
 
     for (k = 0, i = 1; i < m; i++) {
         if (b[i] < b[k])
@@ -211,9 +219,9 @@ void prepare(simplex_t* s, int k) {
     int i;
 
     for (i = m+n; i > n; i--)
-        s->var[i] = s->var[i-1];
+        s->var_at[i] = s->var_at[i-1];
 
-    s->var[n] = m+n;
+    s->var_at[n] = m+n;
 
     n = n+1;
 
@@ -230,46 +238,62 @@ void prepare(simplex_t* s, int k) {
 }
 
 
-void pivot(simplex_t* s, int row, int col) {
+void pivot(simplex_t* s, int p, int q) {
     float** a = s->a;
     float* b = s->b;
     float* c = s->c;
     int m = s->m;
     int n = s->n;
-    int i,j,t;
+    int i, j, t;
+    float a_pq_inv, a_iq;
 
-    t = s->var[col];
-    s->var[col] = s->var[n+row];
-    s->var[n+row] = t;
+    // p and q are the indices of the pivot row and column, respectively
 
-    s->y = s->y + c[col]*b[row]/a[row][col];
+    // prepare extra column
+    for (i = 0; i < m; i++)
+        a[i][s->prev_q] = 0;
+
+    a[p][s->prev_q] = 1;
+
+    // calculate reciprocal pivot element
+    a_pq_inv = 1/a[p][q];
+
+    // update the objective function, constants and bounds
+    s->y = s->y + c[q]*b[p]*a_pq_inv;
 
     for (i = 0; i < n; i++)
-        if (i != col)
-            c[i] = c[i] - c[col]*a[row][i]/a[row][col];
+        if (i != q)
+            c[i] = c[i] - c[q]*a[p][i]*a_pq_inv;
 
-    c[col] = -c[col]/a[row][col];
-
-    for (i = 0; i < m; i++)
-        if (i != row)
-            b[i] = b[i] - a[i][col]*b[row]/a[row][col];
+    c[q] = -c[q]*a_pq_inv;
 
     for (i = 0; i < m; i++)
-        if (i != row)
-            for (j = 0; j < n; j++)
-                if (j != col)
-                    a[i][j] = a[i][j] - a[i][col]*a[row][j]/a[row][col];
+        if (i != p)
+            b[i] = b[i] - a[i][q]*b[p]*a_pq_inv;
 
-    for ( i = 0; i < m; i++)
-        if (i != row)
-            a[i][col] = -a[i][col]/a[row][col];
+    b[p] = b[p]*a_pq_inv;
 
-    for (i = 0; i < n; i++)
-        if (i != col)
-            a[row][i] = a[row][i]/a[row][col];
+    // update pivot row
+    for (i = 0; i < n+1; i++)
+        a[p][i] = a[p][i]*a_pq_inv;
 
-    b[row] = b[row]/a[row][col];
-    a[row][col] = 1/a[row][col];
+    // update all other rows
+    for (i = 0; i < m; i++)
+        if (i != p) {
+            a_iq = a[i][q];
+            for (j = 0; j < n+1; j++)
+                if (j != q)
+                    a[i][j] = a[i][j] - a_iq*a[p][j];
+        }
+
+    // copy extra column into pivot column
+    for (i = 0; i < m; i++)
+        a[i][q] = a[i][s->prev_q];
+
+    // exchange indices
+    t = s->var_at[q];
+    s->var_at[q] = s->var_at[n+p];
+    s->var_at[n+p] = t;
 }
 
 
@@ -302,9 +326,7 @@ int main() {
 #endif
         scanf("%d %d", &m, &n);
 
-        // printf("m = %d ; n = %d\n", m, n);
-
-        float** a = make_matrix(m, n+1);
+        float** a = make_matrix(m, n+2);
         float b[m];
         float c[n];
 

@@ -5,11 +5,11 @@ typedef struct simplex_t simplex_t;
 
 float simplex(int m, int n, float** a, float* b, float* c, float* x, float y);
 
-float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int h);
+float xsimplex(int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int prev_q, int h);
 
-int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var);
+int initial(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int prev_q);
 
-int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var);
+int init(simplex_t* s, int m, int n, float** a, float* b, float* c, float* x, float y, int* var, int prev_q);
 
 void prepare(simplex_t* s, int k);
 
