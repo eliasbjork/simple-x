@@ -115,6 +115,7 @@ clean:
 	$(MAKE) -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
 	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile clean
 	find . -name '*.o' -delete
+	find . -name '*.out' -delete
 	find . -name '*.elf' -delete
 	find . -name '*.ub' -delete
 	find . -name '*.hex' -delete
