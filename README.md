@@ -155,12 +155,20 @@ tio --map INLCRNL $(tio --list | grep UART)
 ```
 
 
-To test the setup, flash the `hello_uart.S` program which writes a string to the UART
+To test the setup, flash the `hello_world.c` program which writes a string to the UART
 ```sh
-make TARGET=fusesoc_libraries/veerwolf/sw/hello_uart.S flash
+make TARGET=sw/hello_world.c flash
 ```
 Start the debug server
 ```sh
 make debug
 ```
 and you should see something printed to `tio`.
+
+
+## Simulating VeeR EL2
+
+Programs can be compiled and run on a simulated EL2 using the following `make` rule
+```sh
+make el2sim TARGET=<path/to/program> PLATFORM=el2sim
+```

@@ -1,4 +1,4 @@
-TARGET ?= hello_uart.c
+TARGET ?= hello_world.c
 
 ifeq ($(notdir $(TARGET)), simplex.elf)
 TARGET_OBJS = simplex/$(notdir $(basename $(TARGET)).o) simplex/util.o
@@ -12,8 +12,25 @@ TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
 CC = $(TOOLCHAIN_PREFIX)gcc
 AS = $(CC) $(CFLAGS) -c
 
+PLATFORM ?= veerwolf
+
+ifeq ($(PLATFORM), veerwolf)
+LINKER_SCRIPT = crt/link.ld
+PLATFORM_SPECIFIC_OBJS = \
+	crt/crt0.o \
+	lib/uartio.o \
+	ext/mini-scanf/c_scan.o
+PLATFORM_DEFINE = VEERWOLF
+else ifeq ($(PLATFORM), el2sim)
+LINKER_SCRIPT = el2sim/link.ld
+PLATFORM_SPECIFIC_OBJS = \
+	el2sim/crt0.o \
+	el2sim/hostio.o
+PLATFORM_DEFINE = EL2SIM
+endif
+
 CFLAGS = \
-	-march=rv32im_zicsr \
+	-march=rv32imac_zicsr \
 	-mabi=ilp32 \
 	-nostartfiles \
 	-nostdlib \
@@ -23,19 +40,17 @@ CFLAGS = \
 	$(DEFINES)
 
 LDFLAGS = \
-	-Tcrt/link.ld \
+	-T$(LINKER_SCRIPT) \
 	-static-libgcc -lgcc
 
 OBJS = \
-	crt/crt.o \
+	$(PLATFORM_SPECIFIC_OBJS) \
 	lib/fmath.o \
 	lib/mem.o \
-	lib/uartio.o \
 	ext/printf/printf.o \
-	ext/mini-scanf/c_scan.o
 
 DEFINES = \
-	-DVEERWOLF \
+	-D$(PLATFORM_DEFINE) \
 	-DPRINTF_DISABLE_SUPPORT_LONG_LONG \
 	-DPRINTF_DISABLE_SUPPORT_PTRDIFF_T \
 	-DPRINTF_DISABLE_SUPPORT_EXPONENTIAL
