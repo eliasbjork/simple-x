@@ -31,6 +31,8 @@ _start:
 
     la sp, _stack_start
 
+    jal _init_bss
+
     call main
 
     # Map exit code of main() to command to be written to tohost
@@ -53,6 +55,17 @@ _finish:
 _trap:
     li a0, 1 # failure
     j _finish
+
+_init_bss:
+    lw t0, _bss_start
+    lw t1, _bss_end
+    j _bss_bounds_check
+_clear_bss:
+    sw a0, 0(t0)
+    addi t0, t0, 4
+_bss_bounds_check:
+    bltu t0, t1, _clear_bss
+    ret
 
 .section .data.io
 .global tohost
