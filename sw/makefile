@@ -10,7 +10,7 @@ TARGET_ELF = $(basename $(firstword $(TARGET))).elf
 
 TOOLCHAIN_PREFIX ?= riscv64-unknown-elf-
 CC = $(TOOLCHAIN_PREFIX)gcc
-AS = $(CC) $(CFLAGS) -c
+AS = $(TOOLCHAIN_PREFIX)as
 
 PLATFORM ?= veerwolf
 
@@ -29,8 +29,20 @@ PLATFORM_SPECIFIC_OBJS = \
 PLATFORM_DEFINE = EL2SIM
 endif
 
+ifdef ZFINX
+# TODO: use c extension?
+ARCH = rv32ima_zicsr_zfinx
+else
+ARCH = rv32ima_zicsr
+endif
+
+ASFLAGS = \
+	-march=$(ARCH) \
+	-mabi=ilp32 \
+	-g
+
 CFLAGS = \
-	-march=rv32imac_zicsr \
+	-march=$(ARCH) \
 	-mabi=ilp32 \
 	-nostartfiles \
 	-nostdlib \
@@ -48,6 +60,7 @@ OBJS = \
 	lib/fmath.o \
 	lib/mem.o \
 	ext/printf/printf.o \
+	lib/acc/piv.o \
 
 DEFINES = \
 	-D$(PLATFORM_DEFINE) \
