@@ -79,7 +79,7 @@ accpiv_M4_N4_W2:
     # W regs
     sw a3,  0(t2)
     lw a3,  8(t2)
-    sw a4, 4(t2)
+    sw a4,  4(t2)
     lw a4, 12(t2)
 
     # R regs
