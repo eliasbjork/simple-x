@@ -31,9 +31,9 @@ endif
 
 ZFINX ?= 0
 ifeq ($(ZFINX), 1)
-ARCH = rv32imac_zicsr_zfinx
+ARCH = rv32imc_zicsr_zifencei_zfinx
 else
-ARCH = rv32imac_zicsr
+ARCH = rv32imc_zicsr_zifencei
 endif
 
 CFLAGS = \
