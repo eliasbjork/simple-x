@@ -37,6 +37,9 @@ NM = $(TOOLCHAIN_PREFIX)nm
 # build software for veerwolf or el2sim
 PLATFORM ?= veerwolf
 
+# build software with or without zfinx extension
+ZFINX ?= 0
+
 #all: synth program debug
 
 
@@ -64,7 +67,7 @@ debug: program
 ### build software
 
 %.elf:
-	$(MAKE) -C sw TARGET=../$@ TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) PLATFORM=$(PLATFORM)
+	$(MAKE) -C sw TARGET=../$@ TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) PLATFORM=$(PLATFORM) ZFINX=$(ZFINX)
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
@@ -83,9 +86,10 @@ debug: program
 
 .PHONY: el2sim
 el2sim: $(TARGET_HEX) $(TARGET_SYM)
+	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile clean
 	cp $(TARGET_HEX) $(EL2_ROOT)/program.hex
 	cp $(TARGET_SYM) $(EL2_ROOT)/$(TEST).sym
-	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile verilator TEST=$(TEST) RV_ROOT=$(EL2_ROOT) SKIP_HEX_BUILD=1
+	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile verilator TEST=$(TEST) RV_ROOT=$(EL2_ROOT) SKIP_HEX_BUILD=1 debug=1
 
 
 ### tools
@@ -114,12 +118,12 @@ $(LAST_FLASHED_ELF):
 clean:
 	$(MAKE) -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
 	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile clean
-	find . -name '*.o' -delete
-	find . -name '*.out' -delete
-	find . -name '*.elf' -delete
-	find . -name '*.ub' -delete
-	find . -name '*.hex' -delete
-	find . -name '*.sym' -delete
+	find . -name '*.o'   -not -path "./hw/*" -delete
+	find . -name '*.out' -not -path "./hw/*" -delete
+	find . -name '*.elf' -not -path "./hw/*" -delete
+	find . -name '*.ub'  -not -path "./hw/*" -delete
+	find . -name '*.hex' -not -path "./hw/*" -delete
+	find . -name '*.sym' -not -path "./hw/*" -delete
 	rm -rf .temp/
 
 .PHONY: clean_all

@@ -29,14 +29,22 @@ PLATFORM_SPECIFIC_OBJS = \
 PLATFORM_DEFINE = EL2SIM
 endif
 
+ZFINX ?= 0
+ifeq ($(ZFINX), 1)
+ARCH = rv32imac_zicsr_zfinx
+else
+ARCH = rv32imac_zicsr
+endif
+
 CFLAGS = \
-	-march=rv32imac_zicsr \
+	-march=$(ARCH) \
 	-mabi=ilp32 \
 	-nostartfiles \
 	-nostdlib \
 	-std=c18 \
 	-Wall \
 	-g \
+	-O0 \
 	$(DEFINES)
 
 LDFLAGS = \
