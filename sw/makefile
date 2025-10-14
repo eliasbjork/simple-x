@@ -2,6 +2,8 @@ TARGET ?= hello_world.c
 
 ifeq ($(notdir $(TARGET)), simplex.elf)
 TARGET_OBJS = simplex/$(notdir $(basename $(TARGET)).o) simplex/util.o
+else ifeq ($(notdir $(TARGET)), el2sim_simplex.elf)
+TARGET_OBJS = simplex/$(notdir $(basename $(TARGET)).o) simplex/el2sim_util.o
 else
 TARGET_OBJS = $(basename $(TARGET)).o
 endif
