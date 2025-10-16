@@ -47,6 +47,9 @@ CFLAGS = \
 	-std=c18 \
 	-Wall \
 	-g \
+	-O3 \
+	-ffp-contract=fast \
+	-fno-builtin \
 	$(DEFINES)
 
 LDFLAGS = \
