@@ -26,19 +26,54 @@ void _reset_heap() {
 }
 
 
-void* __memset(void* dest, int ch, size_t count) {
-    uint8_t fill_byte = (uint8_t)ch;
-    uint8_t* end = (uint8_t*)dest + count;
+void* memcpy(void* restrict dest, const void* restrict src, size_t count) {
+    uint8_t* end = (uint8_t*)src + count;
+    uint8_t* p = (uint8_t*)src;
+    uint8_t* q = (uint8_t*)dest;
 
-    for (uint8_t* p = (uint8_t*)dest; p < end; p += 4) {
-        *p = fill_byte;
+    while (p < end) {
+        *q++ = *p++;
     }
 
     return dest;
 }
 
 
-void* __malloc(size_t size) {
+void* memmove(void* dest, const void* src, size_t count) {
+    uint8_t* p = (uint8_t*)src;
+    uint8_t* p_end = p + count;
+    uint8_t* q = (uint8_t*)dest;
+
+    if (dest < src) {
+        // forward copy
+        while (p < p_end) {
+            *q++ = *p++;
+        }
+    } else if (dest > src) {
+        // backward copy
+        while (p_end > p) {
+            *(--q) = *(--p);
+        }
+    }
+
+    return dest;
+}
+
+
+void* memset(void* dest, int ch, size_t count) {
+    uint8_t fill_byte = (uint8_t)ch;
+    uint8_t* end = (uint8_t*)dest + count;
+    uint8_t* p = (uint8_t*)dest;
+
+    while (p < end) {
+        *p++ = fill_byte;
+    }
+
+    return dest;
+}
+
+
+void* malloc(size_t size) {
     uintptr_t sp;
     __asm__ volatile ("mv %0, sp" : "=r"(sp));
 
@@ -55,15 +90,15 @@ void* __malloc(size_t size) {
 }
 
 
-void* __calloc(size_t num, size_t size) {
-    void* p = __malloc(num * size);
+void* calloc(size_t num, size_t size) {
+    void* p = malloc(num * size);
 
     if (p != NULL) {
-        __memset(p, 0, num * size);
+        memset(p, 0, num * size);
     }
 
     return p;
 }
 
 
-void __free(void*) {}
+void free(void*) {}
