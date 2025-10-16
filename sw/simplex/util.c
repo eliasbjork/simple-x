@@ -1,12 +1,17 @@
-#ifndef VEERWOLF
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#else
+#if defined(VEERWOLF)
 
 #include "../lib/mem.h"
 #include "../lib/uartio.h"
+
+#elif defined(EL2SIM)
+
+#include "../lib/mem.h"
+#include "../el2sim/hostio.h"
+
+#else
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #endif
 

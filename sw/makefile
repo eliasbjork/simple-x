@@ -27,7 +27,8 @@ else ifeq ($(PLATFORM), el2sim)
 LINKER_SCRIPT = el2sim/link.ld
 PLATFORM_SPECIFIC_OBJS = \
 	el2sim/crt0.o \
-	el2sim/hostio.o
+	el2sim/hostio.o \
+	ext/mini-scanf/c_scan.o
 PLATFORM_DEFINE = EL2SIM
 endif
 
@@ -46,7 +47,6 @@ CFLAGS = \
 	-std=c18 \
 	-Wall \
 	-g \
-	-O0 \
 	$(DEFINES)
 
 LDFLAGS = \
