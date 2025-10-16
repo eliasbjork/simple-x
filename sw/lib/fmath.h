@@ -7,12 +7,8 @@
 #define INFINITY __builtin_inff()
 #define NAN __builtin_nanf("")
 
-#define fabs __fabs
-#define isinf __isinf
-#define isnan __isnan
-
-float __fabs(float);
-bool __isinf(float);
-bool __isnan(float);
+float fabs(float);
+int isinf(float);
+int isnan(float);
 
 #endif // FMATH_H

@@ -9,7 +9,7 @@ union f_to_u32 {
 };
 
 
-inline float __fabs(float f) {
+inline float fabs(float f) {
     f_to_u32 x;
     x.f = f;
     x.u32 &= 0xFFFFFFFF >> 1;
@@ -17,7 +17,7 @@ inline float __fabs(float f) {
 }
 
 
-inline bool __isnan(float f) {
+inline int isnan(float f) {
     // return f != f; // Doesn't work with -ffast-math
     f_to_u32 x;
     x.f = f;
@@ -25,6 +25,6 @@ inline bool __isnan(float f) {
 }
 
 
-inline bool __isinf(float f) {
+inline int isinf(float f) {
     return fabs(f) == INFINITY;
 }
