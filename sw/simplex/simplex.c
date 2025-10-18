@@ -236,46 +236,58 @@ void prepare(simplex_t* s, int k) {
 }
 
 
-void pivot(simplex_t* s, int row, int col) {
+void pivot(simplex_t* s, int p, int q) {
     float** a = s->a;
     float* b = s->b;
     float* c = s->c;
     int m = s->m;
     int n = s->n;
     int i,j,t;
+    float a_pq_inv, a_iq;
 
-    t = s->var[col];
-    s->var[col] = s->var[n+row];
-    s->var[n+row] = t;
+    // p and q are the indices of the pivot row and column, respectively
 
-    s->y = s->y + c[col]*b[row]/a[row][col];
+    t = s->var[q];
+    s->var[q] = s->var[n+p];
+    s->var[n+p] = t;
+
+    // calculate reciprocal pivot element
+    a_pq_inv = 1/a[p][q];
+
+    // update the objective function, constants and bounds
+    s->y = s->y + c[q]*b[p]*a_pq_inv;
 
     for (i = 0; i < n; i++)
-        if (i != col)
-            c[i] = c[i] - c[col]*a[row][i]/a[row][col];
+        if (i != q)
+            c[i] = c[i] - c[q]*a[p][i]*a_pq_inv;
 
-    c[col] = -c[col]/a[row][col];
-
-    for (i = 0; i < m; i++)
-        if (i != row)
-            b[i] = b[i] - a[i][col]*b[row]/a[row][col];
+    c[q] = -c[q]*a_pq_inv;
 
     for (i = 0; i < m; i++)
-        if (i != row)
+        if (i != p)
+            b[i] = b[i] - a[i][q]*b[p]*a_pq_inv;
+
+    b[p] = b[p]*a_pq_inv;
+
+    // update pivot row
+    for (i = 0; i < n; i++)
+        a[p][i] = a[p][i]*a_pq_inv;
+
+    // update all other rows
+    for (i = 0; i < m; i++)
+        if (i != p) {
+            a_iq = a[i][q];
             for (j = 0; j < n; j++)
-                if (j != col)
-                    a[i][j] = a[i][j] - a[i][col]*a[row][j]/a[row][col];
+                if (j != q)
+                    a[i][j] = a[i][j] - a_iq*a[p][j];
+        }
 
+    // update pivot col
     for ( i = 0; i < m; i++)
-        if (i != row)
-            a[i][col] = -a[i][col]/a[row][col];
+        if (i != p)
+            a[i][q] = -a[i][q]*a_pq_inv;
 
-    for (i = 0; i < n; i++)
-        if (i != col)
-            a[row][i] = a[row][i]/a[row][col];
-
-    b[row] = b[row]/a[row][col];
-    a[row][col] = 1/a[row][col];
+    a[p][q] = a_pq_inv;
 }
 
 
