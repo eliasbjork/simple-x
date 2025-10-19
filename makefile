@@ -16,6 +16,7 @@ TARGET_HEX = $(basename $(TARGET)).hex
 TARGET_SYM = $(basename $(TARGET)).sym
 TEST = $(notdir $(basename $(TARGET)))
 EL2_ROOT = $(WORKSPACE)/hw/Cores-VeeR-EL2
+SIMPLEX_TESTCASE ?= $(WORKSPACE)/sw/simplex/test/4/8/20008/i
 
 # ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
 .PRECIOUS: $(TARGET_ELF)
@@ -86,10 +87,9 @@ debug: program
 
 .PHONY: el2sim
 el2sim: $(TARGET_HEX) $(TARGET_SYM)
-	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile clean
 	cp $(TARGET_HEX) $(EL2_ROOT)/program.hex
 	cp $(TARGET_SYM) $(EL2_ROOT)/$(TEST).sym
-	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile verilator TEST=$(TEST) RV_ROOT=$(EL2_ROOT) SKIP_HEX_BUILD=1 debug=1
+	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile verilator TEST=$(TEST) RV_ROOT=$(EL2_ROOT) SIMPLEX_TESTCASE=$(SIMPLEX_TESTCASE) SKIP_HEX_BUILD=1 debug=1
 
 
 ### tools
@@ -117,7 +117,6 @@ $(LAST_FLASHED_ELF):
 .PHONY: clean
 clean:
 	$(MAKE) -C $(VEERWOLF_SW) TOOLCHAIN_PREFIX=$(TOOLCHAIN_PREFIX) clean
-	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile clean
 	find . -name '*.o'   -not -path "./hw/*" -delete
 	find . -name '*.out' -not -path "./hw/*" -delete
 	find . -name '*.elf' -not -path "./hw/*" -delete
@@ -126,6 +125,10 @@ clean:
 	find . -name '*.sym' -not -path "./hw/*" -delete
 	rm -rf .temp/
 
+.PHONY: clean_el2sim
+clean_el2sim:
+	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile clean
+
 .PHONY: clean_all
-clean_all: clean
+clean_all: clean clean_el2sim
 	rm -rf build/ *.jou *.log .Xil/
