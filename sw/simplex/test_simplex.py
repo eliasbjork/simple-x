@@ -14,7 +14,7 @@ TOLERANCE = 1e-5
 
 def collect_test_dirs():
     dirs_with_tests = list(
-        filter(lambda path: os.path.isdir(path), glob.glob("*/*/*/*"))
+        filter(lambda path: os.path.isdir(path), glob.glob("test/*/*/*"))
     )
     return dirs_with_tests
 
@@ -28,6 +28,23 @@ def run_test_on_host(input_path):
     )
 
     return proc.stdout
+
+
+def run_test_on_el2sim(input_path):
+    cwd = pathlib.Path.cwd()
+    input_path = pathlib.Path(input_path)
+
+    proc = subprocess.run(
+        ["make", "-C", "../..", "el2sim", "TARGET=simplex.elf", "PLATFORM=el2sim", f"SIMPLEX_TESTCASE={cwd/input_path}"],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    output = proc.stdout
+    res_str = [line for line in output.splitlines() if "z = " in line][0]
+
+    return res_str
 
 
 def run_test_on_veerwolf(input_path, port, baudrate):
@@ -58,13 +75,16 @@ def test_linopt(dir, platform, port, baudrate):
         res_bytes = run_test_on_host(input_path)
     elif platform == "veerwolf":
         res_bytes = run_test_on_veerwolf(input_path, port, baudrate)
+    elif platform == "el2sim":
+        res_str = run_test_on_el2sim(input_path)
     else:
         raise RuntimeError("Unknown platform")
 
-    try:
-        res_str = res_bytes.decode("utf-8", "strict")
-    except UnicodeDecodeError:
-        pytest.fail("Failed decoding simplex output")
+    if platform == "host" or platform == "veerwolf":
+        try:
+            res_str = res_bytes.decode("utf-8", "strict")
+        except UnicodeDecodeError:
+            pytest.fail("Failed decoding simplex output")
 
     res = float(res_str.split(" ")[-1])
 
