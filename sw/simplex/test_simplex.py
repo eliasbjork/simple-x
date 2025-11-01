@@ -3,6 +3,7 @@ import math
 import os
 import pathlib
 import pytest
+import re
 import serial
 import subprocess
 import textwrap
@@ -14,9 +15,35 @@ TOLERANCE = 1e-5
 
 def collect_test_dirs():
     dirs_with_tests = list(
-        filter(lambda path: os.path.isdir(path), glob.glob("test/*/*/*"))
+        filter(lambda path: os.path.isdir(path), glob.glob(f"{pathlib.Path(__file__).parent}/test/*/*/*"))
     )
     return dirs_with_tests
+
+
+def _parse_value(v: str):
+    """Try to convert numeric values, otherwise return string."""
+    try:
+        if "." in v:
+            return float(v)
+        return int(v)
+    except ValueError:
+        return v
+
+
+def parse_stats_from_output(output):
+    """Extract key = value pairs between '========stats========' and '=====================' markers.
+
+    Returns a dict of {key: value}.
+    """
+    m = re.search(r"========stats========\s*(.*?)\s*=====================", output, flags=re.S | re.I)
+    if not m:
+        return {}
+    block = m.group(1)
+    pairs = re.findall(r"(\w+)\s* = \s*([^\s]+)", block)
+    result = {}
+    for k, v in pairs:
+        result[k] = _parse_value(v)
+    return result
 
 
 def run_test_on_host(input_path):
@@ -30,18 +57,24 @@ def run_test_on_host(input_path):
     return proc.stdout
 
 
-def run_test_on_el2sim(input_path):
+def run_test_on_el2sim(input_path, test_log):
     cwd = pathlib.Path.cwd()
     input_path = pathlib.Path(input_path)
 
     proc = subprocess.run(
-        ["make", "-C", "../..", "el2sim", "TARGET=simplex.elf", "PLATFORM=el2sim", f"SIMPLEX_TESTCASE={cwd/input_path}"],
+        # FIXME: right now we had to add ZFINX=1 here, in case simplex isn't compiled. We should be able to specify not having ZFINX...
+        #        but idk, the fact that testcases are run via the makefile is kinda weird from the get go...
+        ["make", "-C", f"{pathlib.Path(__file__).parent}/../..", "el2sim", "TARGET=simplex.elf", "PLATFORM=el2sim", "ZFINX=1", f"SIMPLEX_TESTCASE={cwd/input_path}"],
         capture_output=True,
         text=True,
         check=True
     )
 
     output = proc.stdout
+
+    stats = parse_stats_from_output(output)
+    test_log.update(stats)
+
     res_str = [line for line in output.splitlines() if "z = " in line][0]
 
     return res_str
@@ -67,7 +100,7 @@ def run_test_on_veerwolf(input_path, port, baudrate):
 
 
 @pytest.mark.parametrize("dir", collect_test_dirs())
-def test_linopt(dir, platform, port, baudrate):
+def test_linopt(dir, platform, port, baudrate, test_log):
     input_path = pathlib.Path(f"{dir}")/"i"
     sol_path = pathlib.Path(f"{dir}")/"linopt.sol"
 
@@ -76,7 +109,7 @@ def test_linopt(dir, platform, port, baudrate):
     elif platform == "veerwolf":
         res_bytes = run_test_on_veerwolf(input_path, port, baudrate)
     elif platform == "el2sim":
-        res_str = run_test_on_el2sim(input_path)
+        res_str = run_test_on_el2sim(input_path, test_log)
     else:
         raise RuntimeError("Unknown platform")
 
