@@ -9,6 +9,7 @@
 #include "../lib/fmath.h"
 #include "../lib/mem.h"
 #include "../el2sim/hostio.h"
+#include "../lib/perf.h"
 
 #else
 
@@ -333,7 +334,18 @@ int main() {
         scan_matrix(a, m, n);
         scan_vec(b, m);
 
+#ifdef EL2SIM
+        set_perf_event(perf_event_3, CYCLES_ACTIVE);
+        int cycle_count = 0;
+#endif
+
         float sol = simplex(m, n, a, b, c, x, y);
+
+#ifdef EL2SIM
+        printf("========stats========\n");
+        get_perf_counter(perf_counter_3, cycle_count);
+        printf("Simplex cycles = %d\n", cycle_count);
+#endif
 
         if (!isnan(sol) && !isinf(sol)) {
             printf("z = %lf\n", sol);
@@ -344,6 +356,9 @@ int main() {
             // the problem is infeasible
             printf("z = nan\n");
         }
+#ifdef EL2SIM
+        printf("=====================\n");
+#endif
 
         free_matrix(a, m);
 
