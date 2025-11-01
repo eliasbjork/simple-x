@@ -60,7 +60,7 @@ OBJS = \
 	$(PLATFORM_SPECIFIC_OBJS) \
 	lib/fmath.o \
 	lib/mem.o \
-	ext/printf/printf.o \
+	ext/printf/printf.o
 
 DEFINES = \
 	-D$(PLATFORM_DEFINE) \
