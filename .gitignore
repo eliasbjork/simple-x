@@ -28,3 +28,6 @@ build/
 
 # Misc
 .temp/
+
+# Simulation results
+sim_results/

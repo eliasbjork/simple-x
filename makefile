@@ -17,6 +17,7 @@ TARGET_SYM = $(basename $(TARGET)).sym
 TEST = $(notdir $(basename $(TARGET)))
 EL2_ROOT = $(WORKSPACE)/hw/Cores-VeeR-EL2
 SIMPLEX_TESTCASE ?= $(WORKSPACE)/sw/simplex/test/4/8/20008/i
+SIM_LOG_PATH ?= $(WORKSPACE)/sim_results/log.csv
 
 # ensures the intermediate elf file is not deleted by make as it is needed by e.g. gdb
 .PRECIOUS: $(TARGET_ELF)
@@ -90,6 +91,12 @@ el2sim: $(TARGET_HEX) $(TARGET_SYM)
 	cp $(TARGET_HEX) $(EL2_ROOT)/program.hex
 	cp $(TARGET_SYM) $(EL2_ROOT)/$(TEST).sym
 	$(MAKE) -C $(EL2_ROOT) -f tools/Makefile verilator TEST=$(TEST) RV_ROOT=$(EL2_ROOT) SIMPLEX_TESTCASE=$(SIMPLEX_TESTCASE) SKIP_HEX_BUILD=1 debug=1
+
+# this rule is really convoluted as it calls sw/simplex/test_simplex.py, where each testcase in turn calls the el2sim make rule above
+# this entire test setup could be made much neater, but works for now...
+.PHONY: el2sim_run_tests
+el2sim_run_tests:
+	pytest sw/simplex/ --platform el2sim -v --logfile $(SIM_LOG_PATH)
 
 
 ### tools
